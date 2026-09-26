@@ -1,0 +1,32 @@
+PCI-DSS excerpts (paraphrased summaries for course use, not verbatim standard text)
+
+### PCI-DSS | 8.3.1 | Multi-Factor Authentication for Remote and Administrative Access
+All remote network access originating from outside the entity's network into the
+cardholder data environment (CDE), and all non-console administrative access to
+system components, must use multi-factor authentication (MFA). A single factor
+(e.g. password alone) is not sufficient for these access paths.
+
+### PCI-DSS | 8.4.2 | Multi-Factor Authentication for All CDE Access
+Multi-factor authentication is required for all access into the CDE, not only
+remote access. This extends the MFA requirement to console and internal access
+paths as well, effective for assessments after March 31, 2025.
+
+### PCI-DSS | 3.5 | Rendering Stored Primary Account Numbers Unreadable
+Primary account numbers (PAN), wherever stored, must be rendered unreadable using
+approved methods such as strong one-way hashing, truncation, tokenization, or
+strong cryptography with associated key-management processes.
+
+### PCI-DSS | 10.2 | Audit Logging of Authentication and Access Events
+Audit logs must capture all individual access to cardholder data, all actions
+taken by users with elevated privileges, and all authentication events including
+successes and failures, with enough detail to reconstruct what happened.
+
+### PCI-DSS | 6.4.3 | Management of Payment Page Scripts
+Scripts loaded and executed on payment pages in the consumer's browser must be
+authorized, their integrity confirmed, and an inventory maintained, to prevent
+unauthorized script injection into checkout and authentication flows.
+
+### PCI-DSS | 12.10.1 | Incident Response for Suspected Account Takeover
+The entity's incident response plan must be tested at least annually and must
+include specific procedures for responding to a suspected or confirmed account
+takeover or unauthorized authentication bypass affecting cardholder data.

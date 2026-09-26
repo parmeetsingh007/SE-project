@@ -1,0 +1,37 @@
+RBI payment/authentication guideline excerpts (paraphrased summaries for course
+use, not verbatim circular text)
+
+### RBI | AFA-1 | Additional Factor Authentication for Digital Payments
+Card-not-present and other digital payment transactions above a specified value
+threshold must be authenticated using an Additional Factor of Authentication
+(AFA) beyond the static password or PIN, such as an OTP, biometric, or a
+dedicated authentication app.
+
+### RBI | AFA-2 | Risk-Based Step-Up Authentication
+Beyond the standard AFA value threshold, banks are expected to run risk-based
+transaction monitoring and trigger step-up authentication automatically for any
+transaction flagged as high risk by their fraud detection systems, regardless of
+transaction value.
+
+### RBI | SMS-OTP-1 | One-Time Password Validity and Reuse
+One-time passwords issued for authenticating a payment must have a limited
+validity window and must not be reusable after a successful or failed
+verification attempt or after expiry.
+
+### RBI | LOCKOUT-1 | Failed Authentication Attempt Handling
+After a defined number of consecutive failed authentication attempts on a
+payment channel or instrument, that channel/instrument must be temporarily
+blocked, the customer notified, and any subsequent unblocking must follow a
+defined, auditable process rather than being automatic and unannounced.
+
+### RBI | TURNAROUND-1 | Authentication Friction and Abandonment
+Authentication steps should not introduce undue friction that causes customers
+to abandon otherwise legitimate transactions. Guidance recommends completing
+authentication promptly, though it does not prescribe a single hard numeric
+response-time SLA that applies to every channel.
+
+### RBI | GRIEVANCE-1 | Customer Grievance Redress and Liability
+Banks must provide customers with a grievance redress mechanism for disputed or
+failed digital payment authentication events, including limited/zero customer
+liability protections in specified unauthorized-transaction scenarios where the
+customer promptly reports the issue.

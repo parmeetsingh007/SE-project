@@ -8,3 +8,4 @@ docs/generated/*
 .DS_Store
 .claude/
 .pytest_cache/
+chroma_db/
