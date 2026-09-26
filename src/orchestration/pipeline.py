@@ -28,14 +28,28 @@ def run_pipeline(transcript_path: str) -> None:
     finally:
         session.close()
 
-    print(f"Extracted, classified, and compliance-mapped {len(requirements)} requirements:\n")
+    print(f"Processed {len(requirements)} requirements:\n")
     for req in requirements:
         categories = ", ".join(c.value for c in req.category) or "(uncategorized)"
-        print(f"- [{categories}] {req.statement}")
+        risk = req.risk_level.value if req.risk_level else "unscored"
+        print(f"- [{categories}] ({req.approval_status.value}, risk={risk}) {req.statement}")
         print(f"  source: {req.source_stakeholder}")
-        if req.applicable_regulations:
-            for citation in req.applicable_regulations:
-                print(f"  regulation: {citation}")
+        for citation in req.applicable_regulations:
+            print(f"  regulation: {citation}")
+        for issue in coordinator.clarification_issues.get(req.id, []):
+            print(f"  needs clarification: {issue.issue}")
+            print(f"    -> {issue.follow_up_question}")
+        for flag in coordinator.security_flags.get(req.id, []):
+            print(f"  implicit security/privacy need: {flag.concern}")
+            print(f"    -> {flag.recommended_requirement}")
+
+    if coordinator.conflicts:
+        print("\nConflicts detected:")
+        for conflict in coordinator.conflicts:
+            print(
+                f"- [{conflict.conflict_type}] {conflict.requirement_id_a} <-> "
+                f"{conflict.requirement_id_b}: {conflict.explanation}"
+            )
 
 
 if __name__ == "__main__":
