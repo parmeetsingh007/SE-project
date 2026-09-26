@@ -54,6 +54,7 @@ Log every agent call (input, output, timestamp) to the audit table for traceabil
 | `conflict_detection.py` | Flags contradicting or duplicate requirements |
 | `compliance.py` | Maps requirements to PCI-DSS / RBI clauses via the retriever; never makes a final legal call, only proposes with citation + confidence |
 | `security_privacy.py` | Flags implicit security/privacy needs (encryption, auth, data retention) |
+| `acceptance_criteria.py` | Drafts concrete, testable acceptance criteria per requirement (added post-hoc so validation.py's completeness check has something real to check) |
 | `risk_analysis.py` | Scores business/technical/compliance risk per requirement |
 | `sdlc_selection.py` | Recommends SDLC model(s) with ranked confidence, from project characteristics |
 | `documentation.py` | Generates SRS.md, user_stories.md, traceability_matrix.csv |
@@ -104,6 +105,9 @@ Postgres at this scale.
    (pre-extraction pass flagging vague transcript statements — simulates adaptive
    interviewing on static transcripts, not a live conversational loop; see README) and
    `validation.py` (final completeness/consistency check, run last before persistence)
+9. `acceptance_criteria.py`: closes validation.py's known gap by populating
+   Requirement.acceptance_criteria before validation runs, so its completeness check
+   has something real to check instead of always failing
 
 ## Out of scope for this project
 
