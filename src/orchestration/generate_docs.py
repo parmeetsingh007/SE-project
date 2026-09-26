@@ -16,30 +16,7 @@ from dotenv import load_dotenv
 
 from src.agents.documentation import DocumentationAgent
 from src.agents.sdlc_selection import SDLCSelectionAgent
-from src.models.db import RequirementORM, SessionLocal, init_db
-from src.models.requirement import Requirement
-
-
-def _load_requirements(db_session) -> list[Requirement]:
-    rows = db_session.query(RequirementORM).all()
-    return [
-        Requirement(
-            id=row.id,
-            statement=row.statement,
-            category=row.category,
-            source_stakeholder=row.source_stakeholder,
-            business_justification=row.business_justification,
-            priority=row.priority,
-            dependencies=row.dependencies,
-            assumptions=row.assumptions,
-            acceptance_criteria=row.acceptance_criteria,
-            applicable_regulations=row.applicable_regulations,
-            risk_level=row.risk_level,
-            confidence_score=row.confidence_score,
-            approval_status=row.approval_status,
-        )
-        for row in rows
-    ]
+from src.models.db import SessionLocal, init_db, load_requirements
 
 
 def generate_docs() -> None:
@@ -48,7 +25,7 @@ def generate_docs() -> None:
 
     session = SessionLocal()
     try:
-        requirements = _load_requirements(session)
+        requirements = load_requirements(session)
         if not requirements:
             print("No persisted requirements found — run the pipeline first.")
             return
