@@ -1,0 +1,8 @@
+anthropic
+chromadb
+sqlalchemy
+fastapi
+streamlit
+pydantic
+python-dotenv
+pytest
