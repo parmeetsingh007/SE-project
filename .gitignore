@@ -6,6 +6,7 @@ __pycache__/
 docs/generated/*
 !docs/generated/.gitkeep
 .DS_Store
-.claude/
+.claude/*
+!.claude/launch.json
 .pytest_cache/
 chroma_db/
