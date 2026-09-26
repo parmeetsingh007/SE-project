@@ -1,4 +1,4 @@
-"""Classification agent: JSON parsing/validation, with the Anthropic call mocked out."""
+"""Classification agent: JSON parsing/validation, with the Gemini call mocked out."""
 
 import json
 from types import SimpleNamespace
@@ -12,9 +12,7 @@ from src.models.requirement import Requirement
 
 def _fake_client(response_text: str) -> MagicMock:
     client = MagicMock()
-    client.messages.create.return_value = SimpleNamespace(
-        content=[SimpleNamespace(type="text", text=response_text)]
-    )
+    client.models.generate_content.return_value = SimpleNamespace(text=response_text)
     return client
 
 
@@ -28,7 +26,7 @@ def test_classification_agent_maps_categories_by_id(monkeypatch: pytest.MonkeyPa
         {"classifications": [{"id": requirement.id, "category": ["security", "compliance"]}]}
     )
     client = _fake_client(valid_json)
-    monkeypatch.setattr("src.agents.base.anthropic.Anthropic", lambda: client)
+    monkeypatch.setattr("src.agents.llm_client.genai.Client", lambda **k: client)
 
     categories_by_id = ClassificationAgent().run([requirement])
 

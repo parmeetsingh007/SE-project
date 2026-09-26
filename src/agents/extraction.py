@@ -5,7 +5,7 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from src.agents.base import call_agent_json
+from src.agents.llm_client import call_agent_json
 
 SYSTEM_PROMPT = """\
 You are the extraction agent in a requirements-gathering pipeline for a bank's \

@@ -8,7 +8,7 @@ import json
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-from src.agents.base import call_agent_json
+from src.agents.llm_client import call_agent_json
 from src.models.requirement import Requirement, RequirementCategory
 
 SYSTEM_PROMPT = """\

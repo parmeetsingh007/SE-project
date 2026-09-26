@@ -1,4 +1,4 @@
-anthropic
+google-genai
 chromadb
 sqlalchemy
 fastapi

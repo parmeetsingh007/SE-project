@@ -1,4 +1,4 @@
-"""Extraction agent: JSON parsing/validation, with the Anthropic call mocked out."""
+"""Extraction agent: JSON parsing/validation, with the Gemini call mocked out."""
 
 import json
 from types import SimpleNamespace
@@ -6,15 +6,13 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from src.agents.base import AgentOutputError
 from src.agents.extraction import ExtractionAgent
+from src.agents.llm_client import AgentOutputError
 
 
 def _fake_client(response_text: str) -> MagicMock:
     client = MagicMock()
-    client.messages.create.return_value = SimpleNamespace(
-        content=[SimpleNamespace(type="text", text=response_text)]
-    )
+    client.models.generate_content.return_value = SimpleNamespace(text=response_text)
     return client
 
 
@@ -34,7 +32,7 @@ def test_extraction_agent_parses_valid_response(monkeypatch: pytest.MonkeyPatch)
         }
     )
     client = _fake_client(valid_json)
-    monkeypatch.setattr("src.agents.base.anthropic.Anthropic", lambda: client)
+    monkeypatch.setattr("src.agents.llm_client.genai.Client", lambda **k: client)
 
     candidates = ExtractionAgent().run("some transcript text")
 
@@ -45,7 +43,7 @@ def test_extraction_agent_parses_valid_response(monkeypatch: pytest.MonkeyPatch)
 
 def test_extraction_agent_raises_on_malformed_json(monkeypatch: pytest.MonkeyPatch) -> None:
     client = _fake_client("not valid json at all")
-    monkeypatch.setattr("src.agents.base.anthropic.Anthropic", lambda: client)
+    monkeypatch.setattr("src.agents.llm_client.genai.Client", lambda **k: client)
 
     with pytest.raises(AgentOutputError):
         ExtractionAgent().run("some transcript text")

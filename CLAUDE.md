@@ -41,7 +41,7 @@ works end-to-end.
 ## Agents to implement (`src/agents/`)
 
 Each agent is a small class/function with a single `run(input) -> output` interface,
-calling the Anthropic API with a system prompt that forces structured JSON output.
+calling the Gemini API with a system prompt that forces structured JSON output.
 Log every agent call (input, output, timestamp) to the audit table for traceability.
 
 | File | Responsibility |
@@ -72,7 +72,7 @@ Postgres at this scale.
 
 ## Tech stack (decided — don't re-litigate unless asked)
 
-- Python 3.11, `anthropic` SDK for all agent LLM calls
+- Python 3.11, `google-genai` SDK (Gemini Flash) for all agent LLM calls
 - ChromaDB (local, persistent) for the knowledge base / RAG
 - SQLite via SQLAlchemy for structured requirements + audit log
 - FastAPI for the backend API (`src/api/main.py`)
