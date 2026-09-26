@@ -42,6 +42,7 @@ scenario live in [`data/sample_inputs/`](data/sample_inputs/).
 | `clarification.py` | Flags incomplete/ambiguous requirements with concrete follow-up questions (per requirement, after extraction) |
 | `conflict_detection.py` | Flags contradicting or duplicate requirements across a batch |
 | `security_privacy.py` | Flags implicit security/privacy needs (encryption, retention, access control) |
+| `acceptance_criteria.py` | Drafts 2-4 concrete, testable acceptance criteria per requirement |
 | `risk_analysis.py` | Scores business/technical/compliance risk per requirement |
 | `sdlc_selection.py` | Recommends SDLC model(s) with ranked confidence (at least 2–3 candidates), from project characteristics |
 | `documentation.py` | Generates SRS.md, user_stories.md, traceability_matrix.csv |
@@ -61,11 +62,11 @@ therefore simulates only the "notice something vague, draft a follow-up"
 half of that loop as a pre-extraction pass over the static transcript. That's
 a deliberate scope cut for this course project, not a bug or an oversight.
 
-**A note on `validation.py`'s acceptance-criteria check:** no agent in the
-current pipeline generates `acceptance_criteria` for a requirement, so that
-one check will always fail today, and every requirement will land in
-`needs_revision` at minimum for that reason. This is a known, accepted gap —
-acceptance-criteria generation would be a natural next agent to add.
+`acceptance_criteria.py` runs before `validation.py` specifically so that
+validation's completeness check has something real to check against — a
+requirement now only reaches `validation`-driven `needs_revision` for a
+genuine gap (missing stakeholder, missing justification, no traceability),
+not simply because nothing generated criteria yet.
 
 ## Tech stack
 
@@ -84,8 +85,9 @@ cp .env.example .env   # then fill in GOOGLE_API_KEY
 ## Usage
 
 **1. Ingest a transcript** (stakeholder interaction → extraction →
-classification → compliance → clarification → security/privacy → risk
-analysis → conflict detection → validation → persistence to SQLite):
+classification → compliance → clarification → security/privacy →
+acceptance criteria → risk analysis → conflict detection → validation →
+persistence to SQLite):
 
 ```bash
 python -m src.orchestration.pipeline data/sample_inputs/transcript_step_up_auth.txt
