@@ -1,5 +1,6 @@
 google-genai
 chromadb
+pandas
 sqlalchemy
 fastapi
 streamlit
