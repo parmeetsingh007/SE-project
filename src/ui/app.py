@@ -20,6 +20,7 @@ from src.agents.coordinator import Coordinator
 from src.agents.human_approval import ApprovalDecision, apply_approval_decision
 from src.models.db import SessionLocal, init_db, load_requirements
 from src.models.requirement import ApprovalStatus, Requirement
+from src.orchestration.generate_docs import generate_documentation
 
 DEFAULT_TRANSCRIPT = "data/sample_inputs/transcript_step_up_auth.txt"
 
@@ -145,3 +146,29 @@ with tab_review:
             with st.expander(_render_requirement_header(req)):
                 _render_requirement_body(req)
                 _render_approval_controls(req, key_prefix="review")
+
+        st.divider()
+        approved = [r for r in all_requirements if r.approval_status == ApprovalStatus.APPROVED]
+        st.subheader("Generate final output")
+        st.write(f"{len(approved)} of {len(all_requirements)} requirement(s) are approved.")
+
+        if st.button("Generate SRS, user stories & SDLC recommendation", disabled=not approved):
+            with st.spinner("Recommending an SDLC approach and drafting the SRS..."):
+                session = SessionLocal()
+                try:
+                    recommendations, output = generate_documentation(approved, session)
+                finally:
+                    session.close()
+
+            st.success(f"Documented {len(approved)} approved requirement(s).")
+            st.markdown("**Recommended SDLC approach:**")
+            for i, rec in enumerate(recommendations, start=1):
+                st.write(f"{i}. **{rec.model}** (confidence: {rec.confidence:.0%}) — {rec.rationale}")
+
+            for label, path in [
+                ("Download SRS.md", output.srs_path),
+                ("Download user_stories.md", output.user_stories_path),
+                ("Download traceability_matrix.csv", output.traceability_csv_path),
+            ]:
+                with open(path, "rb") as f:
+                    st.download_button(label, f.read(), file_name=Path(path).name)
