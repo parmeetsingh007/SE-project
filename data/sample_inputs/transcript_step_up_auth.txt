@@ -1,0 +1,58 @@
+Interview transcript
+Topic: Step-up authentication for high-risk payments
+Participants: Priya Nair (Business Analyst), Marcus Webb (Security Lead)
+Date: 2026-02-11
+
+Priya: Thanks for making time, Marcus. So the ask from the product side is basically
+"add step-up authentication for payments above a risk threshold." Can you walk me
+through what that means from your side?
+
+Marcus: Sure. Right now everything above our fraud model's risk score just goes
+through with a one-time password over SMS, same as every other transaction. What
+we want is: if a payment gets flagged as high risk, we stop and ask the customer
+for something stronger before we let it through.
+
+Priya: When you say "something stronger," what specifically?
+
+Marcus: Honestly, it depends. For app users we'd want biometric — fingerprint or
+face, whatever the phone supports. For web we'd probably fall back to an
+authenticator app code. I haven't fully worked out the web case though, that's
+still being discussed with the mobile team.
+
+Priya: Okay, let's flag that as open. What's the risk threshold — is that a fixed
+number or does it move?
+
+Marcus: It's a score from the fraud engine, 0 to 100. Anything over 70 today
+triggers extra review by an analyst manually. For step-up auth we want it to kick
+in automatically, no analyst in the loop, but honestly I'm not 100% sure 70 is the
+right cutoff for this specific feature — might need to be higher so we're not
+annoying legitimate customers. We'd want to tune it after launch probably.
+
+Priya: Got it, so the threshold itself might be configurable. What happens if the
+customer fails the step-up challenge?
+
+Marcus: They get three attempts, then the transaction is declined and we log it
+as a potential fraud event. After that they'd need to call support to unblock the
+account, actually wait — I think it's supposed to auto-unlock after 24 hours too,
+but don't quote me on that, I'd need to check with the fraud ops team on the exact
+lockout policy.
+
+Priya: No problem, I'll mark that as needs follow-up. From a compliance angle, is
+there anything specific driving this, or is it just general good practice?
+
+Marcus: It's partly RBI's guidelines on additional factor authentication for
+digital payments above certain value bands, and partly PCI-DSS expectations
+around strong customer authentication for card-not-present transactions. Compliance
+gave us a memo on this a few weeks back — I can dig it up if it's useful for you.
+
+Priya: That would help a lot, please send it over. Last thing — any requirement
+around how fast this needs to respond? Customers waiting ten seconds for a
+fingerprint prompt is going to feel broken.
+
+Marcus: Yeah, agreed, it should feel instant. I don't have a hard number handed
+down from anywhere, but personally I'd say the challenge should be presented to
+the user in under two seconds after the risky transaction is detected. That's just
+my gut feel though, not an official SLA.
+
+Priya: That's useful context, I'll write it up as a draft with a note that the
+number needs sign-off. Thanks, Marcus.
