@@ -18,7 +18,7 @@ from sqlalchemy.orm import Session
 
 from src.models.db import AuditLogORM
 
-DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.8-flash")
+DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
 
 T = TypeVar("T", bound=BaseModel)
 
