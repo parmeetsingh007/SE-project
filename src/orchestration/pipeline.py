@@ -28,6 +28,18 @@ def run_pipeline(transcript_path: str) -> None:
     finally:
         session.close()
 
+    validation_issues_by_id = {
+        issue.requirement_id: issue for issue in coordinator.validation_issues
+    }
+
+    if coordinator.stakeholder_follow_ups:
+        print("Pre-extraction stakeholder follow-ups (simulated adaptive interviewing"
+              " on the static transcript — see README):")
+        for follow_up in coordinator.stakeholder_follow_ups:
+            print(f'- "{follow_up.original_statement}"')
+            print(f"    -> {follow_up.follow_up_question}")
+        print()
+
     print(f"Processed {len(requirements)} requirements:\n")
     for req in requirements:
         categories = ", ".join(c.value for c in req.category) or "(uncategorized)"
@@ -42,6 +54,8 @@ def run_pipeline(transcript_path: str) -> None:
         for flag in coordinator.security_flags.get(req.id, []):
             print(f"  implicit security/privacy need: {flag.concern}")
             print(f"    -> {flag.recommended_requirement}")
+        if req.id in validation_issues_by_id:
+            print(f"  validation: {', '.join(validation_issues_by_id[req.id].problems)}")
 
     if coordinator.conflicts:
         print("\nConflicts detected:")

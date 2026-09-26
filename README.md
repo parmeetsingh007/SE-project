@@ -35,21 +35,37 @@ scenario live in [`data/sample_inputs/`](data/sample_inputs/).
 | Agent | Responsibility |
 |---|---|
 | `coordinator.py` | Orchestrates the pipeline, passes shared context between agents |
-| `extraction.py` | Pulls candidate requirement statements from a transcript |
+| `stakeholder_interaction.py` | Pre-processing pass over the raw transcript, before extraction: flags vague/incomplete stakeholder statements and drafts follow-up questions |
+| `extraction.py` | Pulls candidate requirement statements (with a source excerpt for traceability) from a transcript |
 | `classification.py` | Multi-label tags: functional, security, compliance, performance, usability |
 | `compliance.py` | Maps requirements to PCI-DSS/RBI clauses via RAG; proposes with citation + confidence, never a final legal call |
-| `clarification.py` | Flags incomplete/ambiguous requirements with concrete follow-up questions |
+| `clarification.py` | Flags incomplete/ambiguous requirements with concrete follow-up questions (per requirement, after extraction) |
 | `conflict_detection.py` | Flags contradicting or duplicate requirements across a batch |
 | `security_privacy.py` | Flags implicit security/privacy needs (encryption, retention, access control) |
 | `risk_analysis.py` | Scores business/technical/compliance risk per requirement |
-| `sdlc_selection.py` | Recommends SDLC model(s) with ranked confidence, from project characteristics |
+| `sdlc_selection.py` | Recommends SDLC model(s) with ranked confidence (at least 2–3 candidates), from project characteristics |
 | `documentation.py` | Generates SRS.md, user_stories.md, traceability_matrix.csv |
+| `validation.py` | Final completeness/consistency check across the whole batch, run last before persistence — deterministic, not an LLM call |
 | `human_approval.py` | Data contract for a reviewer decision — not an LLM call |
 
 Every LLM-calling agent requests JSON-only output from Gemini and validates it
 against a Pydantic model before it's used downstream (see
 [`src/agents/llm_client.py`](src/agents/llm_client.py)). Every call is logged
 to the `audit_log` table for traceability.
+
+**A note on `stakeholder_interaction.py`:** the problem statement describes
+adaptive interviewing — asking a stakeholder a follow-up question and getting
+a reply. This project's transcripts are pre-written, not live conversations,
+so there's no one to actually answer a follow-up in real time. This agent
+therefore simulates only the "notice something vague, draft a follow-up"
+half of that loop as a pre-extraction pass over the static transcript. That's
+a deliberate scope cut for this course project, not a bug or an oversight.
+
+**A note on `validation.py`'s acceptance-criteria check:** no agent in the
+current pipeline generates `acceptance_criteria` for a requirement, so that
+one check will always fail today, and every requirement will land in
+`needs_revision` at minimum for that reason. This is a known, accepted gap —
+acceptance-criteria generation would be a natural next agent to add.
 
 ## Tech stack
 
@@ -67,9 +83,9 @@ cp .env.example .env   # then fill in GOOGLE_API_KEY
 
 ## Usage
 
-**1. Ingest a transcript** (extraction → classification → compliance →
-clarification → security/privacy → risk analysis → conflict detection →
-persistence to SQLite):
+**1. Ingest a transcript** (stakeholder interaction → extraction →
+classification → compliance → clarification → security/privacy → risk
+analysis → conflict detection → validation → persistence to SQLite):
 
 ```bash
 python -m src.orchestration.pipeline data/sample_inputs/transcript_step_up_auth.txt

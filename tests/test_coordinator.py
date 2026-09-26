@@ -34,12 +34,18 @@ def db_session():
 
 
 def _stub_agents(clarification_issues: list[ClarificationIssue] | None = None):
+    fake_stakeholder_interaction = MagicMock()
+    fake_stakeholder_interaction.run.return_value = []
+
     fake_extraction = MagicMock()
     fake_extraction.run.return_value = [
         ExtractedRequirementCandidate(
             statement="The system shall require step-up authentication above "
             "the risk threshold.",
             source_stakeholder="Marcus Webb (Security Lead)",
+            source_excerpt="if the payment gets flagged as high risk, we stop "
+            "and ask the customer for something stronger",
+            business_justification="Reduce fraud on high-risk payments.",
             open_questions=["What is the web fallback method?"],
         )
     ]
@@ -83,6 +89,7 @@ def _stub_agents(clarification_issues: list[ClarificationIssue] | None = None):
     fake_conflict_detection.run.return_value = []
 
     return {
+        "stakeholder_interaction_agent": fake_stakeholder_interaction,
         "extraction_agent": fake_extraction,
         "classification_agent": fake_classification,
         "compliance_agent": fake_compliance,
@@ -103,14 +110,22 @@ def test_coordinator_persists_fully_processed_requirement(db_session: Session) -
     assert req.applicable_regulations == ["RBI AFA-2 - Risk-Based Step-Up Authentication"]
     assert req.risk_level == RiskLevel.HIGH
     assert req.confidence_score == pytest.approx(0.75)
-    assert req.approval_status == ApprovalStatus.PENDING
     assert coordinator.clarification_issues == {}
     assert coordinator.conflicts == []
+    assert coordinator.stakeholder_follow_ups == []
+
+    # Validation still flags it: no agent in the pipeline populates
+    # acceptance_criteria yet, so that check always fails today. This is a
+    # known, real gap (see validation.py's docstring), not a test bug.
+    assert req.approval_status == ApprovalStatus.NEEDS_REVISION
+    assert len(coordinator.validation_issues) == 1
+    assert coordinator.validation_issues[0].requirement_id == req.id
+    assert coordinator.validation_issues[0].problems == ["Missing acceptance criteria."]
 
     persisted = db_session.get(RequirementORM, req.id)
     assert persisted is not None
     assert persisted.risk_level == "high"
-    assert persisted.approval_status == "pending"
+    assert persisted.approval_status == "needs_revision"
 
 
 def test_coordinator_flags_incomplete_requirement_for_revision(db_session: Session) -> None:
@@ -136,11 +151,13 @@ def test_coordinator_flags_conflicting_requirements_for_revision(db_session: Ses
         ExtractedRequirementCandidate(
             statement="The system shall lock the account after 3 failed attempts.",
             source_stakeholder="Marcus Webb (Security Lead)",
+            source_excerpt="they get three attempts, then the transaction is declined",
         ),
         ExtractedRequirementCandidate(
             statement="The system shall never lock the account regardless of "
             "failed attempts.",
             source_stakeholder="Marcus Webb (Security Lead)",
+            source_excerpt="they get three attempts, then the transaction is declined",
         ),
     ]
     agents["extraction_agent"] = fake_extraction
