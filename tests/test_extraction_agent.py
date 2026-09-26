@@ -24,6 +24,8 @@ def test_extraction_agent_parses_valid_response(monkeypatch: pytest.MonkeyPatch)
                     "statement": "The system shall require biometric step-up "
                     "authentication for app payments above the risk threshold.",
                     "source_stakeholder": "Marcus Webb (Security Lead)",
+                    "source_excerpt": "For app users we'd want biometric — "
+                    "fingerprint or face, whatever the phone supports.",
                     "business_justification": "Reduce fraud on high-risk payments.",
                     "assumptions": ["Phone supports biometric hardware."],
                     "open_questions": ["What is the web fallback method?"],

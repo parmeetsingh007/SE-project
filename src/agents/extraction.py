@@ -16,6 +16,10 @@ Pull out every candidate software requirement implied by the conversation, even 
 it was stated informally. For each one, capture:
 - statement: a single clear requirement sentence, phrased as "The system shall ..."
 - source_stakeholder: whoever raised or owns this requirement (name + role)
+- source_excerpt: a short direct quote (one sentence or so) copied verbatim from
+  the transcript that grounds this requirement — the traceability link back to
+  where it came from. Never leave this empty or paraphrase it into something
+  that doesn't appear in the transcript.
 - business_justification: why it's needed, if stated or clearly implied; else null
 - assumptions: things the speakers assumed but did not confirm
 - open_questions: anything left vague, unresolved, or explicitly flagged as
@@ -26,7 +30,8 @@ ambiguity yourself — capture it in open_questions instead, a later agent handl
 
 Respond with ONLY valid JSON matching this schema, no prose before or after:
 {"requirements": [{"statement": str, "source_stakeholder": str,
-"business_justification": str | null, "assumptions": [str], "open_questions": [str]}]}
+"source_excerpt": str, "business_justification": str | null, "assumptions": [str],
+"open_questions": [str]}]}
 """
 
 
@@ -35,6 +40,7 @@ class ExtractedRequirementCandidate(BaseModel):
 
     statement: str
     source_stakeholder: str
+    source_excerpt: str
     business_justification: str | None = None
     assumptions: list[str] = Field(default_factory=list)
     open_questions: list[str] = Field(default_factory=list)

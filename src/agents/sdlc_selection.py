@@ -22,15 +22,25 @@ requirements: how many there are, their category and risk-level distribution, ho
 many still need revision (incomplete/ambiguous) or have unresolved conflicts, and \
 how many cite a specific regulation.
 
-Recommend one or more SDLC models, ranked by confidence, that best fit these \
-characteristics. Consider standard models: Waterfall, V-Model, Incremental, Spiral, \
-Agile (Scrum/Kanban), and Agile-with-security-gates (DevSecOps-style). Ground each \
-recommendation in the specific characteristics given — e.g. high regulatory density \
-and compliance risk favor models with formal sign-off gates (V-Model, Waterfall, or \
-Agile-with-security-gates); a high proportion of items needing revision favors an \
-iterative model with tight stakeholder feedback loops (Agile, Incremental). Do not \
-recommend a model without tying it to at least one specific characteristic you were \
-given.
+Recommend at least 2, ideally 3, SDLC models, ranked by confidence, that best fit \
+these characteristics. Use this project-condition table as your underlying logic, \
+combining conditions where more than one applies:
+- Requirements are stable, few need revision -> Waterfall
+- Strict verification & validation needed (heavy regulatory/compliance density) \
+-> V-Model
+- High uncertainty (many requirements still needing revision, unresolved \
+conflicts, low confidence scores) -> Spiral
+- Requirements are likely to change frequently, low regulatory density -> Agile \
+(Scrum/Kanban)
+- Continuous secure deployment matters (high security-category density) -> \
+Agile-with-security-gates (DevSecOps-style)
+- High regulation AND still evolving/incomplete at the same time -> a hybrid: \
+Agile-V-Model or Agile-with-security-gates
+
+Ground each recommendation in the specific characteristics given — do not \
+recommend a model without tying it to at least one specific characteristic you \
+were given. Give each a distinct confidence score reflecting how well it fits \
+versus the alternatives, not all clustered at the same number.
 
 Respond with ONLY valid JSON matching this schema, no prose before or after, ranked \
 highest confidence first:
@@ -45,7 +55,7 @@ class SDLCRecommendation(BaseModel):
 
 
 class SDLCSelectionOutput(BaseModel):
-    recommendations: list[SDLCRecommendation]
+    recommendations: list[SDLCRecommendation] = Field(min_length=2)
 
 
 def summarize_requirements(requirements: list[Requirement]) -> dict:

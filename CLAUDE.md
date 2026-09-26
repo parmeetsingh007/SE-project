@@ -100,6 +100,10 @@ Postgres at this scale.
 5. SDLC selection agent + documentation agent (SRS/user stories/traceability output)
 6. Streamlit UI with the human-approval gate wired to the SQLite approval_status field
 7. End-to-end demo: raw transcript in → approved SRS + SDLC recommendation out
+8. Gap-closing pass against the original problem statement: `stakeholder_interaction.py`
+   (pre-extraction pass flagging vague transcript statements — simulates adaptive
+   interviewing on static transcripts, not a live conversational loop; see README) and
+   `validation.py` (final completeness/consistency check, run last before persistence)
 
 ## Out of scope for this project
 
