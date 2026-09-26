@@ -28,11 +28,14 @@ def run_pipeline(transcript_path: str) -> None:
     finally:
         session.close()
 
-    print(f"Extracted and classified {len(requirements)} requirements:\n")
+    print(f"Extracted, classified, and compliance-mapped {len(requirements)} requirements:\n")
     for req in requirements:
         categories = ", ".join(c.value for c in req.category) or "(uncategorized)"
         print(f"- [{categories}] {req.statement}")
         print(f"  source: {req.source_stakeholder}")
+        if req.applicable_regulations:
+            for citation in req.applicable_regulations:
+                print(f"  regulation: {citation}")
 
 
 if __name__ == "__main__":
