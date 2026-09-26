@@ -28,12 +28,12 @@ DEFAULT_TRANSCRIPT = "data/sample_inputs/transcript_step_up_auth.txt"
 
 load_dotenv()
 init_db()
-st.set_page_config(page_title="Payment Requirements Review", layout="wide", page_icon="🛡️")
+st.set_page_config(page_title="Payment Requirements Review", layout="wide", page_icon="📝")
 st.markdown(CSS, unsafe_allow_html=True)
 st.markdown(
     """
     <div class="app-header">
-        <h1>🛡️ Payment-Processing Requirements</h1>
+        <h1>📝 Payment-Processing Requirements</h1>
         <p>Multi-agent requirement gathering, compliance mapping &amp; the human approval gate</p>
     </div>
     """,

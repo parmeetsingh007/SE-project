@@ -4,6 +4,7 @@ pandas
 sqlalchemy
 fastapi
 streamlit
+watchdog
 pydantic
 python-dotenv
 pytest
