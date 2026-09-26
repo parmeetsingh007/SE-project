@@ -66,6 +66,10 @@ def _render_requirement_card(
                 st.write("**Applicable regulations:**")
                 for citation in req.applicable_regulations:
                     st.write(f"- {citation}")
+            if req.acceptance_criteria:
+                st.write("**Acceptance criteria:**")
+                for criterion in req.acceptance_criteria:
+                    st.write(f"- {criterion}")
             if req.confidence_score:
                 st.write(f"**Risk confidence:** {req.confidence_score:.0%}")
             for issue in clarification_issues or []:

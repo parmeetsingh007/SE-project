@@ -75,6 +75,13 @@ def _stub_agents(clarification_issues: list[ClarificationIssue] | None = None):
     fake_security_privacy = MagicMock()
     fake_security_privacy.run.return_value = []
 
+    fake_acceptance_criteria = MagicMock()
+    fake_acceptance_criteria.run.return_value = [
+        "Given a payment flagged above the risk threshold, when the challenge "
+        "is presented, then the customer must pass step-up authentication "
+        "before the transaction proceeds."
+    ]
+
     fake_risk_analysis = MagicMock()
     fake_risk_analysis.run.return_value = RiskScores(
         business_risk=0.6,
@@ -95,6 +102,7 @@ def _stub_agents(clarification_issues: list[ClarificationIssue] | None = None):
         "compliance_agent": fake_compliance,
         "clarification_agent": fake_clarification,
         "security_privacy_agent": fake_security_privacy,
+        "acceptance_criteria_agent": fake_acceptance_criteria,
         "risk_analysis_agent": fake_risk_analysis,
         "conflict_detection_agent": fake_conflict_detection,
     }
@@ -114,18 +122,17 @@ def test_coordinator_persists_fully_processed_requirement(db_session: Session) -
     assert coordinator.conflicts == []
     assert coordinator.stakeholder_follow_ups == []
 
-    # Validation still flags it: no agent in the pipeline populates
-    # acceptance_criteria yet, so that check always fails today. This is a
-    # known, real gap (see validation.py's docstring), not a test bug.
-    assert req.approval_status == ApprovalStatus.NEEDS_REVISION
-    assert len(coordinator.validation_issues) == 1
-    assert coordinator.validation_issues[0].requirement_id == req.id
-    assert coordinator.validation_issues[0].problems == ["Missing acceptance criteria."]
+    # acceptance_criteria.py now populates the field validation.py checks for,
+    # so a fully-complete requirement genuinely reaches PENDING.
+    assert req.acceptance_criteria != []
+    assert req.approval_status == ApprovalStatus.PENDING
+    assert coordinator.validation_issues == []
 
     persisted = db_session.get(RequirementORM, req.id)
     assert persisted is not None
     assert persisted.risk_level == "high"
-    assert persisted.approval_status == "needs_revision"
+    assert persisted.approval_status == "pending"
+    assert persisted.acceptance_criteria != []
 
 
 def test_coordinator_flags_incomplete_requirement_for_revision(db_session: Session) -> None:
