@@ -1,6 +1,6 @@
-"""Shared helper for calling the Anthropic API with validated JSON-only output.
+"""Shared helper for calling the Gemini API with validated JSON-only output.
 
-Every agent asks Claude for JSON-only output and validates it against a Pydantic
+Every agent asks Gemini for JSON-only output and validates it against a Pydantic
 model before returning. This module centralizes that call + parse + audit-log
 sequence so individual agent files stay focused on their own prompt and schema.
 """
@@ -11,13 +11,14 @@ import json
 import os
 from typing import TypeVar
 
-import anthropic
+from google import genai
+from google.genai import types as genai_types
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.orm import Session
 
 from src.models.db import AuditLogORM
 
-DEFAULT_MODEL = os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-5")
+DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -33,27 +34,27 @@ def call_agent_json(
     system_prompt: str,
     user_content: str,
     output_model: type[T],
-    client: anthropic.Anthropic | None = None,
+    client: genai.Client | None = None,
     db_session: Session | None = None,
     model: str = DEFAULT_MODEL,
-    max_tokens: int = 4096,
 ) -> T:
-    """Call Claude with a JSON-only system prompt and validate the response.
+    """Call Gemini with a JSON-only system prompt and validate the response.
 
     Logs every call (input, raw output, timestamp) to the audit_log table when
     ``db_session`` is provided. Raises ``AgentOutputError`` on parse/validation
     failure instead of silently dropping the bad output.
     """
-    client = client or anthropic.Anthropic()
-    message = client.messages.create(
+    client = client or genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
+
+    response = client.models.generate_content(
         model=model,
-        max_tokens=max_tokens,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_content}],
+        contents=user_content,
+        config=genai_types.GenerateContentConfig(
+            system_instruction=system_prompt,
+            response_mime_type="application/json",
+        ),
     )
-    raw_text = "".join(
-        block.text for block in message.content if getattr(block, "type", None) == "text"
-    )
+    raw_text = response.text
 
     try:
         data = json.loads(raw_text)
