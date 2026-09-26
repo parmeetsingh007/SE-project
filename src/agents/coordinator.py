@@ -4,6 +4,7 @@ Not itself an LLM call — it owns the sequencing and hands each agent exactly
 what it needs, then persists the result. Milestone 2 wired extraction and
 classification; Milestone 3 added compliance mapping; Milestone 4 added
 clarification, conflict detection, security/privacy, and risk analysis;
+acceptance_criteria populates the field validation.py checks for;
 validation runs last, right before persistence; stakeholder_interaction runs
 first, as a pre-processing pass over the raw transcript before extraction.
 
@@ -18,6 +19,7 @@ from __future__ import annotations
 
 from sqlalchemy.orm import Session
 
+from src.agents.acceptance_criteria import AcceptanceCriteriaAgent
 from src.agents.classification import ClassificationAgent
 from src.agents.clarification import ClarificationAgent, ClarificationIssue
 from src.agents.compliance import ComplianceAgent
@@ -43,6 +45,7 @@ class Coordinator:
         compliance_agent: ComplianceAgent | None = None,
         clarification_agent: ClarificationAgent | None = None,
         security_privacy_agent: SecurityPrivacyAgent | None = None,
+        acceptance_criteria_agent: AcceptanceCriteriaAgent | None = None,
         risk_analysis_agent: RiskAnalysisAgent | None = None,
         conflict_detection_agent: ConflictDetectionAgent | None = None,
         validation_agent: ValidationAgent | None = None,
@@ -55,6 +58,7 @@ class Coordinator:
         self.compliance_agent = compliance_agent or ComplianceAgent()
         self.clarification_agent = clarification_agent or ClarificationAgent()
         self.security_privacy_agent = security_privacy_agent or SecurityPrivacyAgent()
+        self.acceptance_criteria_agent = acceptance_criteria_agent or AcceptanceCriteriaAgent()
         self.risk_analysis_agent = risk_analysis_agent or RiskAnalysisAgent()
         self.conflict_detection_agent = conflict_detection_agent or ConflictDetectionAgent()
         self.validation_agent = validation_agent or ValidationAgent()
@@ -116,6 +120,10 @@ class Coordinator:
             flags = self.security_privacy_agent.run(requirement, db_session=db_session)
             if flags:
                 self.security_flags[requirement.id] = flags
+
+            requirement.acceptance_criteria = self.acceptance_criteria_agent.run(
+                requirement, db_session=db_session
+            )
 
             risk = self.risk_analysis_agent.run(requirement, db_session=db_session)
             requirement.risk_level = risk.overall_risk_level

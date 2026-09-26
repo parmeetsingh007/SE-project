@@ -48,6 +48,8 @@ def run_pipeline(transcript_path: str) -> None:
         print(f"  source: {req.source_stakeholder}")
         for citation in req.applicable_regulations:
             print(f"  regulation: {citation}")
+        for criterion in req.acceptance_criteria:
+            print(f"  acceptance criterion: {criterion}")
         for issue in coordinator.clarification_issues.get(req.id, []):
             print(f"  needs clarification: {issue.issue}")
             print(f"    -> {issue.follow_up_question}")
