@@ -17,6 +17,8 @@ CLI to display.
 
 from __future__ import annotations
 
+import uuid
+
 from sqlalchemy.orm import Session
 
 from src.agents.acceptance_criteria import AcceptanceCriteriaAgent
@@ -29,8 +31,10 @@ from src.agents.risk_analysis import RiskAnalysisAgent
 from src.agents.security_privacy import SecurityPrivacyAgent, SecurityPrivacyFlag
 from src.agents.stakeholder_interaction import FollowUpItem, StakeholderInteractionAgent
 from src.agents.validation import ValidationAgent, ValidationIssue
-from src.models.db import RequirementORM
+from src.models.db import RequirementORM, create_batch
 from src.models.requirement import ApprovalStatus, Requirement
+
+TRANSCRIPT_PREVIEW_LENGTH = 300
 
 
 class Coordinator:
@@ -63,6 +67,7 @@ class Coordinator:
         self.conflict_detection_agent = conflict_detection_agent or ConflictDetectionAgent()
         self.validation_agent = validation_agent or ValidationAgent()
 
+        self.last_batch_id: str | None = None
         self.stakeholder_follow_ups: list[FollowUpItem] = []
         self.clarification_issues: dict[str, list[ClarificationIssue]] = {}
         self.security_flags: dict[str, list[SecurityPrivacyFlag]] = {}
@@ -71,7 +76,15 @@ class Coordinator:
 
     def run(self, transcript_text: str, db_session: Session) -> list[Requirement]:
         """Runs one transcript through the full agent pipeline and persists
-        the resulting requirements."""
+        the resulting requirements, all stamped with one new batch_id so a
+        later SDLC recommendation can be scoped to just this ingestion."""
+        batch_id = str(uuid.uuid4())
+        self.last_batch_id = batch_id
+        preview = transcript_text.strip().replace("\n", " ")[:TRANSCRIPT_PREVIEW_LENGTH]
+        if len(transcript_text.strip()) > TRANSCRIPT_PREVIEW_LENGTH:
+            preview += "..."
+        create_batch(db_session, batch_id, preview)
+
         self.stakeholder_follow_ups = self.stakeholder_interaction_agent.run(
             transcript_text, db_session=db_session
         )
@@ -80,6 +93,7 @@ class Coordinator:
 
         requirements = [
             Requirement(
+                batch_id=batch_id,
                 statement=candidate.statement,
                 source_stakeholder=candidate.source_stakeholder,
                 business_justification=candidate.business_justification,

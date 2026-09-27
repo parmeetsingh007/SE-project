@@ -121,6 +121,7 @@ def test_coordinator_persists_fully_processed_requirement(db_session: Session) -
     assert coordinator.clarification_issues == {}
     assert coordinator.conflicts == []
     assert coordinator.stakeholder_follow_ups == []
+    assert req.batch_id == coordinator.last_batch_id
 
     # acceptance_criteria.py now populates the field validation.py checks for,
     # so a fully-complete requirement genuinely reaches PENDING.
@@ -191,3 +192,4 @@ def test_coordinator_flags_conflicting_requirements_for_revision(db_session: Ses
 
     assert all(r.approval_status == ApprovalStatus.NEEDS_REVISION for r in requirements)
     assert len(coordinator.conflicts) == 1
+    assert requirements[0].batch_id == requirements[1].batch_id == coordinator.last_batch_id
