@@ -69,6 +69,58 @@ def write_user_stories(output_dir: Path, stories: list) -> Path:
     return path
 
 
+def write_requirements_report(
+    output_dir: Path, batch_id: str, batch_label: str, requirements: list[Requirement]
+) -> Path:
+    """Writes every requirement extracted from one transcript ingestion,
+    grouped by current approval_status — unlike the SRS, which only ever
+    lists approved requirements. Regenerated after every ingestion and every
+    approve/send-back/reject click so it always reflects the batch's current
+    review state, not just a point-in-time snapshot."""
+    groups: dict[str, list[Requirement]] = {"approved": [], "needs_revision": [], "pending": [], "rejected": []}
+    for r in requirements:
+        groups.setdefault(r.approval_status.value, []).append(r)
+
+    lines = [
+        f"# Requirements Report — {batch_label}",
+        "",
+        f"_Generated {datetime.now(timezone.utc).isoformat()}_",
+        "",
+        f"Total: {len(requirements)} — "
+        f"Approved: {len(groups['approved'])}, "
+        f"Needs revision: {len(groups['needs_revision'])}, "
+        f"Pending: {len(groups['pending'])}, "
+        f"Rejected: {len(groups['rejected'])}",
+        "",
+    ]
+
+    section_titles = {
+        "approved": "## Approved",
+        "needs_revision": "## Needs Revision",
+        "pending": "## Pending Review",
+        "rejected": "## Rejected",
+    }
+    for status, title in section_titles.items():
+        lines.append(title)
+        lines.append("")
+        if not groups[status]:
+            lines.append("_None._")
+            lines.append("")
+            continue
+        for r in groups[status]:
+            categories = ", ".join(c.value for c in r.category) or "—"
+            risk = r.risk_level.value if r.risk_level else "—"
+            lines.append(f"- **{r.id[:8]}** ({categories}, risk: {risk}) — {r.statement}")
+            if r.open_questions:
+                for q in r.open_questions:
+                    lines.append(f"  - _Open question:_ {q}")
+        lines.append("")
+
+    path = output_dir / f"requirements_report_{batch_id[:8]}.md"
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
+
+
 def write_traceability_csv(output_dir: Path, requirements: list[Requirement]) -> Path:
     path = output_dir / "traceability_matrix.csv"
     with path.open("w", newline="", encoding="utf-8") as f:

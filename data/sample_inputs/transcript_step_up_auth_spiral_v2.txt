@@ -1,0 +1,32 @@
+Stakeholder 1 — VP of Payments:
+We need step-up authentication for high-risk payments, but we're still arguing about what counts as "high-risk." Some of us want a flat transaction amount cutoff, others want something smarter. Nothing's been decided.
+
+Stakeholder 2 — Head of Fraud & Risk:
+A flat amount cutoff is too crude — a $50 transaction from a stolen card is riskier than a $5,000 transaction from a loyal customer. I want a behavioral risk score instead, but we don't have one built, and we don't know how long it would take to build or how accurate it would even be until we test it against real transactions.
+
+Stakeholder 3 — VP of Payments:
+I hear you, but Finance needs a number to model conversion impact against, and I can't give them "a risk score we haven't built yet." We're stuck between what's technically right and what's plannable, and I don't see a way to resolve that today.
+
+Stakeholder 4 — Security Architect:
+Separately, we haven't picked the second factor. OTP by SMS is fastest to ship but everyone knows it's phishable and vulnerable to SIM-swap. A hardware-backed passkey is much stronger but we don't know what fraction of our customer base has a device that supports it — nobody's pulled that number yet.
+
+Stakeholder 5 — Customer Experience Lead:
+Whatever we pick, I'm worried about drop-off. Last time we added a verification step to checkout, we saw a real conversion drop, but we never isolated how much of that was the verification itself versus something else that changed at the same time. So I don't actually trust our own historical data here.
+
+Stakeholder 6 — Compliance Officer:
+On the regulatory side, I can't tell you today whether either option — SMS OTP or a passkey — would satisfy RBI's definition of an acceptable additional factor. The relevant guidance is still in draft and could go either way. If we build one and it doesn't qualify, we'd have to redo it.
+
+Stakeholder 7 — Head of Fraud & Risk:
+There's also disagreement about what happens after a failed step-up. I'd rather block the transaction outright — better safe than sorry. Customer Experience disagrees.
+
+Stakeholder 8 — Customer Experience Lead:
+Blocking outright is going to generate support tickets and angry customers for what might just be a typo'd OTP. I'd rather retry or offer a fallback method. We haven't agreed and I don't think we're close.
+
+Stakeholder 9 — Engineering Lead:
+Underneath all of this, we don't actually know if our checkout service can call out to a fraud-scoring engine in real time without adding noticeable delay. Nobody's built a prototype to measure that yet, so right now it's a guess either way.
+
+Stakeholder 10 — VP of Payments:
+Given how much is still open — the risk trigger, the auth method, the compliance answer, the failure behavior, even whether we can build this fast enough — I don't want to commit to a full rollout plan. I'd rather fund a short, narrow experiment: pick one auth method, run it on a small slice of real traffic, measure fraud and drop-off directly, and use that to make every one of these decisions instead of guessing.
+
+Stakeholder 11 — Head of Fraud & Risk:
+Agreed. I can't sign off on a final risk model, a final auth method, or a final failure policy right now — all of that depends on what the pilot actually shows us, and I expect we'll be revisiting this conversation more than once before we land anywhere final.
