@@ -17,9 +17,11 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 
+from contextlib import contextmanager
+
 from src.agents.coordinator import Coordinator
 from src.agents.human_approval import ApprovalDecision, apply_approval_decision
-from src.agents.llm_client import RateLimitedError
+from src.agents.llm_client import RateLimitedError, set_status_sink
 from src.agents.sdlc_selection import SDLCRecommendation
 from src.models.db import BatchORM, SessionLocal, init_db, load_batches, load_requirements
 from src.models.requirement import ApprovalStatus, Requirement
@@ -27,6 +29,22 @@ from src.orchestration.generate_docs import generate_documentation
 from src.ui.theme import CSS, batch_badge, category_badges, risk_badge, status_badge
 
 DEFAULT_TRANSCRIPT = "data/sample_inputs/transcript_step_up_auth.txt"
+
+
+@contextmanager
+def _live_status(spinner_text: str):
+    """Wraps a block of Gemini calls with a spinner plus a placeholder that
+    llm_client updates in real time while it's rate-limit-pacing or retrying
+    — so a long wait (expected on the free tier) shows what it's doing
+    instead of looking like the app has frozen."""
+    placeholder = st.empty()
+    set_status_sink(lambda message: placeholder.info(message))
+    try:
+        with st.spinner(spinner_text):
+            yield
+    finally:
+        set_status_sink(None)
+        placeholder.empty()
 
 load_dotenv()
 init_db()
@@ -196,7 +214,7 @@ with tab_ingest:
                 transcript_text = f.read()
 
         coordinator = Coordinator()
-        with st.spinner("Running the agent pipeline (this calls the Gemini API several times)..."):
+        with _live_status("Running the agent pipeline (this calls the Gemini API several times)..."):
             session = SessionLocal()
             try:
                 requirements = coordinator.run(transcript_text, session)
@@ -221,7 +239,7 @@ with tab_ingest:
         st.caption(f"Batch ID: `{failed_batch_id}`")
         if st.button("Resume ingestion"):
             coordinator = Coordinator()
-            with st.spinner("Resuming from the last completed requirement..."):
+            with _live_status("Resuming from the last completed requirement..."):
                 session = SessionLocal()
                 try:
                     requirements = coordinator.resume(failed_batch_id, session)
@@ -315,7 +333,7 @@ with tab_review:
             chosen_batch, chosen_reqs, chosen_approved = batch_groups[chosen_i]
 
             if st.button("Generate & view results", type="primary"):
-                with st.spinner("Recommending an SDLC approach and drafting the SRS..."):
+                with _live_status("Recommending an SDLC approach and drafting the SRS..."):
                     session = SessionLocal()
                     try:
                         recommendations, output = generate_documentation(
