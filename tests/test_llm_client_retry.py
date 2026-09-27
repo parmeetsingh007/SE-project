@@ -10,7 +10,12 @@ import pytest
 from google.genai import errors as genai_errors
 from pydantic import BaseModel
 
-from src.agents.llm_client import AgentOutputError, RateLimitedError, call_agent_json
+from src.agents.llm_client import (
+    AgentOutputError,
+    RateLimitedError,
+    call_agent_json,
+    set_status_sink,
+)
 
 
 class _Echo(BaseModel):
@@ -134,6 +139,30 @@ def test_retry_delay_respects_server_suggested_value() -> None:
     # Server said 0s (+2s buffer) — should not fall through to the much
     # larger exponential-backoff default.
     assert _retry_delay_seconds(exc, attempt=5) == pytest.approx(2.0)
+
+
+def test_retry_backoff_reports_to_the_status_sink() -> None:
+    """The UI needs to know *why* a call is taking a while (rate-limit
+    pacing, a retry) instead of a silent wait that looks like a hang."""
+    client = MagicMock()
+    client.models.generate_content.side_effect = [
+        _rate_limit_error(429),
+        SimpleNamespace(text='{"ok": true}'),
+    ]
+    messages: list[str] = []
+    set_status_sink(messages.append)
+    try:
+        call_agent_json(
+            agent_name="test",
+            system_prompt="prompt",
+            user_content="content",
+            output_model=_Echo,
+            client=client,
+        )
+    finally:
+        set_status_sink(None)
+
+    assert any("429" in m and "retrying" in m for m in messages)
 
 
 def test_malformed_json_still_raises_agent_output_error() -> None:

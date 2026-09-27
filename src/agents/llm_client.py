@@ -16,6 +16,8 @@ import os
 import threading
 import time
 from collections import deque
+from collections.abc import Callable
+from contextvars import ContextVar
 from typing import TypeVar
 
 from google import genai
@@ -43,6 +45,30 @@ MAX_RETRY_DELAY_SECONDS = 65.0
 RETRYABLE_STATUS_CODES = {429, 503}
 
 T = TypeVar("T", bound=BaseModel)
+
+# Lets a UI show *why* a call is taking a while (rate-limit pacing, a 429/503
+# retry) instead of a bare, silent spinner — long waits are expected on the
+# free tier and easily look like a hang without this. A contextvar rather
+# than a parameter threaded through every agent's run() signature, since
+# dozens of call sites would otherwise need to change for a purely cosmetic
+# concern. Always defaults to None (no UI attached); set via set_status_sink.
+_status_sink: ContextVar[Callable[[str], None] | None] = ContextVar(
+    "llm_client_status_sink", default=None
+)
+
+
+def set_status_sink(callback: Callable[[str], None] | None) -> None:
+    """Registers a callback invoked with a human-readable string whenever
+    llm_client is waiting (rate-limit pacing or a retry backoff). Pass None
+    to stop reporting. The Streamlit UI uses this to show live progress."""
+    _status_sink.set(callback)
+
+
+def _report_status(message: str) -> None:
+    print(f"[llm_client] {message}")
+    sink = _status_sink.get()
+    if sink is not None:
+        sink(message)
 
 
 class AgentOutputError(ValueError):
@@ -72,6 +98,10 @@ class _RateLimiter:
             if len(self._call_times) >= self.limit:
                 wait_for = self.window_seconds - (time.monotonic() - self._call_times[0])
                 if wait_for > 0:
+                    _report_status(
+                        f"At the {self.limit}/{self.window_seconds:.0f}s Gemini rate "
+                        f"limit, pacing — waiting {wait_for:.0f}s before the next call..."
+                    )
                     time.sleep(wait_for + 0.05)
                 self._evict_expired()
             self._call_times.append(time.monotonic())
@@ -145,8 +175,8 @@ def _generate_with_retry(
                     "minute and try again."
                 ) from exc
             delay = _retry_delay_seconds(exc, attempt)
-            print(
-                f"[llm_client] Gemini returned {exc.code}, retrying in {delay:.0f}s "
+            _report_status(
+                f"Gemini returned {exc.code}, retrying in {delay:.0f}s "
                 f"(attempt {attempt + 1}/{MAX_RATE_LIMIT_RETRIES})..."
             )
             time.sleep(delay)
