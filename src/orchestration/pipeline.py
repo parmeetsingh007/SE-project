@@ -40,6 +40,7 @@ def run_pipeline(transcript_path: str) -> None:
             print(f"    -> {follow_up.follow_up_question}")
         print()
 
+    print(f"Batch: {coordinator.last_batch_id}")
     print(f"Processed {len(requirements)} requirements:\n")
     for req in requirements:
         categories = ", ".join(c.value for c in req.category) or "(uncategorized)"

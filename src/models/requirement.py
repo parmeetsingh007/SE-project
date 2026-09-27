@@ -50,6 +50,7 @@ class Requirement(BaseModel):
     """
 
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    batch_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     statement: str
     category: list[RequirementCategory] = Field(default_factory=list)
     source_stakeholder: str

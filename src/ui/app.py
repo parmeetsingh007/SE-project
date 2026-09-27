@@ -19,10 +19,11 @@ from dotenv import load_dotenv
 
 from src.agents.coordinator import Coordinator
 from src.agents.human_approval import ApprovalDecision, apply_approval_decision
-from src.models.db import SessionLocal, init_db, load_requirements
+from src.agents.sdlc_selection import SDLCRecommendation
+from src.models.db import BatchORM, SessionLocal, init_db, load_batches, load_requirements
 from src.models.requirement import ApprovalStatus, Requirement
 from src.orchestration.generate_docs import generate_documentation
-from src.ui.theme import CSS, category_badges, risk_badge, status_badge
+from src.ui.theme import CSS, batch_badge, category_badges, risk_badge, status_badge
 
 DEFAULT_TRANSCRIPT = "data/sample_inputs/transcript_step_up_auth.txt"
 
@@ -41,21 +42,29 @@ st.markdown(
 )
 
 
+def _batch_label(batch: BatchORM) -> str:
+    return f"{batch.created_at:%Y-%m-%d %H:%M} — {batch.transcript_preview[:40]}"
+
+
 def _render_requirement_card(
     req: Requirement,
     key_prefix: str,
     clarification_issues: list | None = None,
     security_flags: list | None = None,
     validation_issue=None,
+    batch_label: str | None = None,
+    read_only: bool = False,
 ) -> None:
     with st.container(border=True):
         risk = req.risk_level.value if req.risk_level else "unscored"
-        st.markdown(
+        badges = (
             status_badge(req.approval_status.value)
             + risk_badge(risk)
-            + category_badges([c.value for c in req.category]),
-            unsafe_allow_html=True,
+            + category_badges([c.value for c in req.category])
         )
+        if batch_label:
+            badges += batch_badge(batch_label)
+        st.markdown(badges, unsafe_allow_html=True)
         st.markdown(f'<div class="req-statement">{req.statement}</div>', unsafe_allow_html=True)
 
         with st.expander("Details"):
@@ -85,6 +94,9 @@ def _render_requirement_card(
             if validation_issue is not None:
                 st.error("**Validation:** " + "; ".join(validation_issue.problems))
 
+        if read_only:
+            return
+
         cols = st.columns(3)
         actions = [
             ("Approve", ApprovalStatus.APPROVED, cols[0]),
@@ -100,7 +112,27 @@ def _render_requirement_card(
                     )
                 finally:
                     session.close()
+                # keep the in-memory "just processed" snapshot from the ingest
+                # tab consistent with the DB, since it isn't reloaded on rerun
+                last_run = st.session_state.get("last_run")
+                if last_run:
+                    for r in last_run["requirements"]:
+                        if r.id == req.id:
+                            r.approval_status = status
                 st.rerun()
+
+
+def _render_sdlc_cards(recommendations: list[SDLCRecommendation]) -> None:
+    for i, rec in enumerate(recommendations, start=1):
+        st.markdown(
+            f"""
+            <div class="sdlc-card">
+                <h4>{i}. {rec.model} — <span class="confidence">{rec.confidence:.0%}</span></h4>
+                <p>{rec.rationale}</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
 
 def _render_results(recommendations, output, approved_count: int, total: int) -> None:
@@ -112,16 +144,7 @@ def _render_results(recommendations, output, approved_count: int, total: int) ->
     m3.metric("Approval rate", f"{approved_count / total:.0%}" if total else "0%")
 
     st.markdown("#### Recommended SDLC approach")
-    for i, rec in enumerate(recommendations, start=1):
-        st.markdown(
-            f"""
-            <div class="sdlc-card">
-                <h4>{i}. {rec.model} — <span class="confidence">{rec.confidence:.0%}</span></h4>
-                <p>{rec.rationale}</p>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+    _render_sdlc_cards(recommendations)
 
     with st.expander("View full SRS (Markdown)"):
         st.markdown(Path(output.srs_path).read_text(encoding="utf-8"))
@@ -139,7 +162,9 @@ def _render_results(recommendations, output, approved_count: int, total: int) ->
             st.download_button(label, f.read(), file_name=Path(path).name)
 
 
-tab_ingest, tab_review = st.tabs(["📥 Ingest transcript", "✅ Review & approve"])
+tab_ingest, tab_review, tab_history = st.tabs(
+    ["📥 Ingest transcript", "✅ Review & approve", "🕘 History"]
+)
 
 with tab_ingest:
     st.subheader("Run the pipeline on a stakeholder transcript")
@@ -164,6 +189,7 @@ with tab_ingest:
                 session.close()
 
         st.session_state["last_run"] = {
+            "batch_id": coordinator.last_batch_id,
             "requirements": requirements,
             "stakeholder_follow_ups": coordinator.stakeholder_follow_ups,
             "clarification": coordinator.clarification_issues,
@@ -171,10 +197,12 @@ with tab_ingest:
             "conflicts": coordinator.conflicts,
             "validation": {issue.requirement_id: issue for issue in coordinator.validation_issues},
         }
-        st.success(f"Extracted {len(requirements)} requirements.")
+        st.success(f"Extracted {len(requirements)} requirements into a new batch.")
 
     last_run = st.session_state.get("last_run")
     if last_run:
+        st.caption(f"Batch ID: `{last_run['batch_id']}`")
+
         if last_run["stakeholder_follow_ups"]:
             with st.expander(
                 f"🎙️ Pre-extraction stakeholder follow-ups "
@@ -209,8 +237,11 @@ with tab_review:
     session = SessionLocal()
     try:
         all_requirements = load_requirements(session)
+        batches = load_batches(session)
     finally:
         session.close()
+
+    batches_by_id = {batch.id: batch for batch in batches}
 
     if not all_requirements:
         st.info("No requirements yet — ingest a transcript first.")
@@ -220,27 +251,85 @@ with tab_review:
         visible = [r for r in all_requirements if r.approval_status.value in status_filter]
 
         for req in visible:
-            _render_requirement_card(req, key_prefix="review")
+            batch = batches_by_id.get(req.batch_id)
+            _render_requirement_card(
+                req, key_prefix="review", batch_label=_batch_label(batch) if batch else None
+            )
 
         st.divider()
-        approved = [r for r in all_requirements if r.approval_status == ApprovalStatus.APPROVED]
         st.subheader("Generate final output")
-        st.write(f"{len(approved)} of {len(all_requirements)} requirement(s) are approved.")
+        st.caption("Scoped to one batch, so an old ingestion never pollutes a new one's SDLC recommendation.")
 
-        if st.button("Generate & view results", type="primary", disabled=not approved):
-            with st.spinner("Recommending an SDLC approach and drafting the SRS..."):
-                session = SessionLocal()
-                try:
-                    recommendations, output = generate_documentation(approved, session)
-                finally:
-                    session.close()
-            st.session_state["last_docs"] = {
-                "recommendations": recommendations,
-                "output": output,
-                "approved_count": len(approved),
-                "total": len(all_requirements),
-            }
+        batch_groups = []
+        for batch in batches:  # already most-recent-first
+            batch_reqs = [r for r in all_requirements if r.batch_id == batch.id]
+            batch_approved = [r for r in batch_reqs if r.approval_status == ApprovalStatus.APPROVED]
+            if batch_approved:
+                batch_groups.append((batch, batch_reqs, batch_approved))
 
-        last_docs = st.session_state.get("last_docs")
-        if last_docs:
-            _render_results(**last_docs)
+        if not batch_groups:
+            st.write("No batch has an approved requirement yet.")
+        else:
+            labels = [
+                f"{_batch_label(b)} — {len(appr)} approved / {len(reqs)} total"
+                for b, reqs, appr in batch_groups
+            ]
+            chosen_i = st.selectbox(
+                "Batch to generate for", range(len(batch_groups)), format_func=lambda i: labels[i]
+            )
+            chosen_batch, chosen_reqs, chosen_approved = batch_groups[chosen_i]
+
+            if st.button("Generate & view results", type="primary"):
+                with st.spinner("Recommending an SDLC approach and drafting the SRS..."):
+                    session = SessionLocal()
+                    try:
+                        recommendations, output = generate_documentation(
+                            chosen_approved, session, batch_id=chosen_batch.id
+                        )
+                    finally:
+                        session.close()
+                st.session_state["last_docs"] = {
+                    "recommendations": recommendations,
+                    "output": output,
+                    "approved_count": len(chosen_approved),
+                    "total": len(chosen_reqs),
+                }
+
+            last_docs = st.session_state.get("last_docs")
+            if last_docs:
+                _render_results(**last_docs)
+
+with tab_history:
+    st.subheader("Past ingestion batches")
+    session = SessionLocal()
+    try:
+        batches = load_batches(session)
+        all_requirements = load_requirements(session)
+    finally:
+        session.close()
+
+    if not batches:
+        st.info("No batches yet — ingest a transcript first.")
+    else:
+        for batch in batches:
+            batch_reqs = [r for r in all_requirements if r.batch_id == batch.id]
+            batch_approved = [r for r in batch_reqs if r.approval_status == ApprovalStatus.APPROVED]
+            header = (
+                f"{batch.created_at:%Y-%m-%d %H:%M} — {len(batch_approved)} approved / "
+                f"{len(batch_reqs)} total — {batch.transcript_preview[:60]}"
+            )
+            with st.expander(header):
+                st.write(f"**Transcript preview:** {batch.transcript_preview}")
+
+                if batch.sdlc_recommendation:
+                    st.markdown("**SDLC recommendation:**")
+                    recs = [SDLCRecommendation.model_validate(d) for d in batch.sdlc_recommendation]
+                    _render_sdlc_cards(recs)
+                else:
+                    st.caption("No SDLC recommendation generated yet for this batch.")
+
+                st.markdown("**Requirements:**")
+                for req in batch_reqs:
+                    _render_requirement_card(
+                        req, key_prefix=f"history-{batch.id}", read_only=True
+                    )

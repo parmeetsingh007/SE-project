@@ -101,18 +101,25 @@ streamlit run src/ui/app.py
 
 Use the **Ingest transcript** tab to run the pipeline from the browser, and
 the **Review & approve** tab to inspect each requirement (category, risk,
-regulations, clarification questions, security/privacy flags) and click
-**Approve** / **Send back for revision** / **Reject**. Nothing is final until
-approved here.
+regulations, clarification questions, security/privacy flags, and which
+batch/ingestion it came from) and click **Approve** / **Send back for
+revision** / **Reject**. Nothing is final until approved here. The
+**History** tab lists every past ingestion batch — when it ran, a transcript
+preview, how many requirements it produced/how many are approved, and its
+SDLC recommendation once one's been generated — read-only.
 
-**3. Generate the final output** — SDLC recommendation + SRS, from *approved*
-requirements only (also available as a button in the Streamlit Review tab):
+**3. Generate the final output** — SDLC recommendation + SRS, scoped to
+*one batch's* approved requirements (also available as a button in the
+Streamlit Review tab, with a dropdown to pick the batch — defaults to the
+most recently ingested one, so approving requirements from a new transcript
+never mixes into an old batch's recommendation):
 
 ```bash
 python -m src.orchestration.generate_docs
 ```
 
-Writes `SRS.md`, `user_stories.md`, and `traceability_matrix.csv` to
+Picks the most recently ingested batch that has at least one approved
+requirement. Writes `SRS.md`, `user_stories.md`, and `traceability_matrix.csv` to
 [`docs/generated/`](docs/generated/).
 
 ## Tests
@@ -133,10 +140,16 @@ running tests never touches the real ingested data in
 [`src/models/db.py`](src/models/db.py)):
 
 ```
-id, statement, category (list), source_stakeholder, business_justification,
+id, batch_id, statement, category (list), source_stakeholder, business_justification,
 priority, dependencies, assumptions, acceptance_criteria,
 applicable_regulations, risk_level, confidence_score, approval_status
 ```
+
+Every requirement carries a `batch_id`, generated once per transcript ingestion, so
+requirements from different ingestions never get mixed together when generating an
+SDLC recommendation. Each batch is also its own row (`BatchORM`) with the ingestion
+timestamp, a transcript preview, and — once generated — its SDLC recommendation,
+viewable in the **History** tab.
 
 ## Out of scope
 

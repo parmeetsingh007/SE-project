@@ -146,6 +146,7 @@ div[data-baseweb="popover"] li {
 .badge-risk-unscored { background: #EEE9DF; color: #8A8072; }
 
 .badge-category { background: var(--accent-soft); color: var(--accent-hover); }
+.badge-batch { background: #EEE9DF; color: #8A8072; font-weight: 500; }
 
 .req-statement {
     font-size: 1.08rem;
@@ -186,6 +187,10 @@ def status_badge(status: str) -> str:
 
 def risk_badge(risk: str) -> str:
     return f'<span class="badge badge-risk-{risk}">risk: {risk}</span>'
+
+
+def batch_badge(label: str) -> str:
+    return f'<span class="badge badge-batch">🗂 {label}</span>'
 
 
 def category_badges(categories: list[str]) -> str:

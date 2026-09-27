@@ -64,12 +64,20 @@ Log every agent call (input, output, timestamp) to the audit table for traceabil
 ## Data model
 
 Requirement fields (see `src/models/requirement.py`, Pydantic + SQLAlchemy):
-`id, statement, category (list), source_stakeholder, business_justification, priority,
-dependencies, assumptions, acceptance_criteria, applicable_regulations, risk_level,
-confidence_score, approval_status`.
+`id, batch_id, statement, category (list), source_stakeholder, business_justification,
+priority, dependencies, assumptions, acceptance_criteria, applicable_regulations,
+risk_level, confidence_score, approval_status`.
 
-Store requirements and the audit log in SQLite (`src/models/db.py`) — no need for
-Postgres at this scale.
+`batch_id` groups every requirement produced by one transcript ingestion (see
+`Coordinator.run()`), so SDLC recommendation and doc generation can be scoped to one
+batch instead of mixing requirements from unrelated ingestions. A `BatchORM` row per
+batch (`src/models/db.py`) holds the ingestion timestamp, a transcript preview, and —
+once generated — that batch's SDLC recommendation.
+
+Store requirements, batches, and the audit log in SQLite (`src/models/db.py`) — no
+need for Postgres at this scale. `init_db()` migrates a database created before
+batch tracking existed: it adds the column, backfills old rows under a fixed
+`LEGACY_BATCH_ID`, and creates a matching batch row so History still shows them.
 
 ## Tech stack (decided — don't re-litigate unless asked)
 
