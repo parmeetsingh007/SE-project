@@ -63,3 +63,10 @@ class Requirement(BaseModel):
     risk_level: RiskLevel | None = None
     confidence_score: float = Field(default=0.0, ge=0.0, le=1.0)
     approval_status: ApprovalStatus = ApprovalStatus.PENDING
+
+    # Persisted (not just kept in an in-memory per-run dict) so a resumed
+    # batch has everything clarification/validation need without re-running
+    # extraction. See Coordinator.resume().
+    source_excerpt: str = ""
+    open_questions: list[str] = Field(default_factory=list)
+    processing_complete: bool = False

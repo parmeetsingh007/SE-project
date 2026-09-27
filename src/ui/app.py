@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 
 from src.agents.coordinator import Coordinator
 from src.agents.human_approval import ApprovalDecision, apply_approval_decision
+from src.agents.llm_client import RateLimitedError
 from src.agents.sdlc_selection import SDLCRecommendation
 from src.models.db import BatchORM, SessionLocal, init_db, load_batches, load_requirements
 from src.models.requirement import ApprovalStatus, Requirement
@@ -44,6 +45,20 @@ st.markdown(
 
 def _batch_label(batch: BatchORM) -> str:
     return f"{batch.created_at:%Y-%m-%d %H:%M} — {batch.transcript_preview[:40]}"
+
+
+def _snapshot_run(coordinator: Coordinator, requirements: list[Requirement]) -> dict:
+    """Captures one run()/resume() call's results for session_state, so the
+    ingest tab's "just-processed" section works the same after either."""
+    return {
+        "batch_id": coordinator.last_batch_id,
+        "requirements": requirements,
+        "stakeholder_follow_ups": coordinator.stakeholder_follow_ups,
+        "clarification": coordinator.clarification_issues,
+        "security": coordinator.security_flags,
+        "conflicts": coordinator.conflicts,
+        "validation": {issue.requirement_id: issue for issue in coordinator.validation_issues},
+    }
 
 
 def _render_requirement_card(
@@ -180,24 +195,44 @@ with tab_ingest:
             with open(DEFAULT_TRANSCRIPT, encoding="utf-8") as f:
                 transcript_text = f.read()
 
+        coordinator = Coordinator()
         with st.spinner("Running the agent pipeline (this calls the Gemini API several times)..."):
             session = SessionLocal()
             try:
-                coordinator = Coordinator()
                 requirements = coordinator.run(transcript_text, session)
+            except RateLimitedError:
+                st.session_state["failed_batch_id"] = coordinator.last_batch_id
+                st.session_state.pop("last_run", None)
+            else:
+                st.session_state["last_run"] = _snapshot_run(coordinator, requirements)
+                st.session_state.pop("failed_batch_id", None)
+                st.success(f"Extracted {len(requirements)} requirements into a new batch.")
             finally:
                 session.close()
 
-        st.session_state["last_run"] = {
-            "batch_id": coordinator.last_batch_id,
-            "requirements": requirements,
-            "stakeholder_follow_ups": coordinator.stakeholder_follow_ups,
-            "clarification": coordinator.clarification_issues,
-            "security": coordinator.security_flags,
-            "conflicts": coordinator.conflicts,
-            "validation": {issue.requirement_id: issue for issue in coordinator.validation_issues},
-        }
-        st.success(f"Extracted {len(requirements)} requirements into a new batch.")
+    failed_batch_id = st.session_state.get("failed_batch_id")
+    if failed_batch_id:
+        st.error(
+            "Gemini's free-tier quota (15 requests/minute) was exhausted and retries "
+            "didn't recover in time. Progress up to this point has already been saved "
+            "— click below to continue this batch once the quota resets (usually "
+            "within a minute), rather than re-ingesting from scratch."
+        )
+        st.caption(f"Batch ID: `{failed_batch_id}`")
+        if st.button("Resume ingestion"):
+            coordinator = Coordinator()
+            with st.spinner("Resuming from the last completed requirement..."):
+                session = SessionLocal()
+                try:
+                    requirements = coordinator.resume(failed_batch_id, session)
+                except RateLimitedError:
+                    st.error("Still rate-limited — wait a little longer and try Resume again.")
+                else:
+                    st.session_state["last_run"] = _snapshot_run(coordinator, requirements)
+                    st.session_state.pop("failed_batch_id", None)
+                    st.success(f"Resumed and finished {len(requirements)} requirement(s).")
+                finally:
+                    session.close()
 
     last_run = st.session_state.get("last_run")
     if last_run:
@@ -286,14 +321,21 @@ with tab_review:
                         recommendations, output = generate_documentation(
                             chosen_approved, session, batch_id=chosen_batch.id
                         )
+                    except RateLimitedError:
+                        st.error(
+                            "Gemini's free-tier quota (15 requests/minute) was exhausted "
+                            "while generating this. Nothing was lost — wait a minute and "
+                            "click 'Generate & view results' again."
+                        )
+                    else:
+                        st.session_state["last_docs"] = {
+                            "recommendations": recommendations,
+                            "output": output,
+                            "approved_count": len(chosen_approved),
+                            "total": len(chosen_reqs),
+                        }
                     finally:
                         session.close()
-                st.session_state["last_docs"] = {
-                    "recommendations": recommendations,
-                    "output": output,
-                    "approved_count": len(chosen_approved),
-                    "total": len(chosen_reqs),
-                }
 
             last_docs = st.session_state.get("last_docs")
             if last_docs:

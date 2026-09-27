@@ -10,7 +10,7 @@ import pytest
 from google.genai import errors as genai_errors
 from pydantic import BaseModel
 
-from src.agents.llm_client import AgentOutputError, call_agent_json
+from src.agents.llm_client import AgentOutputError, RateLimitedError, call_agent_json
 
 
 class _Echo(BaseModel):
@@ -83,7 +83,7 @@ def test_gives_up_after_max_retries() -> None:
     client = MagicMock()
     client.models.generate_content.side_effect = _rate_limit_error(429)
 
-    with pytest.raises(genai_errors.ClientError):
+    with pytest.raises(RateLimitedError):
         call_agent_json(
             agent_name="test",
             system_prompt="prompt",
@@ -109,6 +109,31 @@ def test_non_retryable_error_raises_immediately() -> None:
         )
 
     assert client.models.generate_content.call_count == 1
+
+
+def test_exponential_backoff_grows_without_server_hint() -> None:
+    """A 503 with no RetryInfo (the common case) should back off
+    exponentially by attempt number, not use a flat delay every time."""
+    from src.agents.llm_client import _retry_delay_seconds
+
+    exc = genai_errors.ServerError(
+        503, {"error": {"code": 503, "message": "overloaded", "status": "UNAVAILABLE"}}
+    )
+
+    delays = [_retry_delay_seconds(exc, attempt) for attempt in range(4)]
+
+    assert delays == sorted(delays)
+    assert delays[0] < delays[-1]
+
+
+def test_retry_delay_respects_server_suggested_value() -> None:
+    from src.agents.llm_client import _retry_delay_seconds
+
+    exc = _rate_limit_error(429)  # retryDelay: "0s" in the fixture
+
+    # Server said 0s (+2s buffer) — should not fall through to the much
+    # larger exponential-backoff default.
+    assert _retry_delay_seconds(exc, attempt=5) == pytest.approx(2.0)
 
 
 def test_malformed_json_still_raises_agent_output_error() -> None:

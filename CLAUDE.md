@@ -66,13 +66,22 @@ Log every agent call (input, output, timestamp) to the audit table for traceabil
 Requirement fields (see `src/models/requirement.py`, Pydantic + SQLAlchemy):
 `id, batch_id, statement, category (list), source_stakeholder, business_justification,
 priority, dependencies, assumptions, acceptance_criteria, applicable_regulations,
-risk_level, confidence_score, approval_status`.
+risk_level, confidence_score, approval_status, source_excerpt, open_questions,
+processing_complete`.
 
 `batch_id` groups every requirement produced by one transcript ingestion (see
 `Coordinator.run()`), so SDLC recommendation and doc generation can be scoped to one
 batch instead of mixing requirements from unrelated ingestions. A `BatchORM` row per
 batch (`src/models/db.py`) holds the ingestion timestamp, a transcript preview, and —
 once generated — that batch's SDLC recommendation.
+
+`source_excerpt`, `open_questions`, and `processing_complete` exist to make
+`Coordinator.resume()` possible: the per-requirement agent loop (compliance,
+clarification, security/privacy, acceptance criteria, risk analysis — the expensive
+part, ~5 Gemini calls per requirement) checkpoints after each requirement finishes,
+so a Gemini quota failure partway through a large batch doesn't force starting over.
+`resume(batch_id, ...)` re-loads the batch's requirements and only re-processes ones
+where `processing_complete` is still `False`.
 
 Store requirements, batches, and the audit log in SQLite (`src/models/db.py`) — no
 need for Postgres at this scale. `init_db()` migrates a database created before
@@ -116,6 +125,15 @@ batch tracking existed: it adds the column, backfills old rows under a fixed
 9. `acceptance_criteria.py`: closes validation.py's known gap by populating
    Requirement.acceptance_criteria before validation runs, so its completeness check
    has something real to check instead of always failing
+10. Gemini free-tier reliability pass: `llm_client.py` gained a process-wide sliding-
+    window rate limiter (paces every call to stay under 15 req/min instead of bursting
+    and hitting 429) plus real exponential backoff with Google's own suggested retry
+    delay when given. `Coordinator.run()` now checkpoints progress (persists
+    requirements right after classification, updates each one after it finishes the
+    per-requirement agent loop) so a quota failure partway through a batch is
+    resumable via `Coordinator.resume(batch_id, ...)` instead of a total loss. The
+    Streamlit UI catches `RateLimitedError` and shows a plain message + a Resume
+    button instead of a raw traceback.
 
 ## Out of scope for this project
 

@@ -142,7 +142,8 @@ running tests never touches the real ingested data in
 ```
 id, batch_id, statement, category (list), source_stakeholder, business_justification,
 priority, dependencies, assumptions, acceptance_criteria,
-applicable_regulations, risk_level, confidence_score, approval_status
+applicable_regulations, risk_level, confidence_score, approval_status,
+source_excerpt, open_questions, processing_complete
 ```
 
 Every requirement carries a `batch_id`, generated once per transcript ingestion, so
@@ -150,6 +151,23 @@ requirements from different ingestions never get mixed together when generating 
 SDLC recommendation. Each batch is also its own row (`BatchORM`) with the ingestion
 timestamp, a transcript preview, and — once generated — its SDLC recommendation,
 viewable in the **History** tab.
+
+## Gemini rate limits and resuming a failed ingestion
+
+The free tier allows 15 requests/minute, and the pipeline makes ~5 Gemini calls per
+requirement (compliance, clarification, security/privacy, acceptance criteria, risk
+analysis) — a transcript with several requirements can exceed that on its own.
+[`src/agents/llm_client.py`](src/agents/llm_client.py) paces every call through a
+shared rate limiter so the app itself doesn't burst past the quota, and retries a
+429/503 with backoff (using Gemini's own suggested delay when it gives one, growing
+exponentially otherwise) before giving up.
+
+If retries are exhausted, `Coordinator.run()` doesn't lose the batch: requirements
+are persisted right after extraction/classification, and each one is checkpointed
+(`processing_complete`) as soon as it finishes the per-requirement agent loop. The
+Streamlit UI shows a plain error message with a **Resume ingestion** button instead
+of a traceback — resuming calls `Coordinator.resume(batch_id, ...)`, which only
+re-processes requirements that weren't finished yet.
 
 ## Out of scope
 
