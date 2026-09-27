@@ -171,16 +171,6 @@ div[data-baseweb="popover"] li {
 </style>
 """
 
-CATEGORY_ICONS = {
-    "functional": "⚙️",
-    "security": "🔒",
-    "compliance": "📋",
-    "performance": "⚡",
-    "usability": "🎯",
-    "other": "🏷️",
-}
-
-
 def status_badge(status: str) -> str:
     return f'<span class="badge badge-{status}">{status.replace("_", " ")}</span>'
 
@@ -190,13 +180,10 @@ def risk_badge(risk: str) -> str:
 
 
 def batch_badge(label: str) -> str:
-    return f'<span class="badge badge-batch">🗂 {label}</span>'
+    return f'<span class="badge badge-batch">{label}</span>'
 
 
 def category_badges(categories: list[str]) -> str:
     if not categories:
         return '<span class="badge badge-category">uncategorized</span>'
-    return "".join(
-        f'<span class="badge badge-category">{CATEGORY_ICONS.get(c, "🏷️")} {c}</span>'
-        for c in categories
-    )
+    return "".join(f'<span class="badge badge-category">{c}</span>' for c in categories)
