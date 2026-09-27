@@ -44,6 +44,16 @@ DEFAULT_RETRY_DELAY_SECONDS = 20.0
 MAX_RETRY_DELAY_SECONDS = 65.0
 RETRYABLE_STATUS_CODES = {429, 503}
 
+# Every agent's job here is "follow the instructions precisely" (extract only
+# what's grounded, flag ambiguity, don't invent) — none of them want creative
+# variety. Left unset, Gemini's default temperature (~1.0) is tuned for the
+# opposite of that, and produces real run-to-run inconsistency: the same
+# prompt on the same transcript can either correctly flag an unresolved
+# conflict or silently smooth it into a clean-sounding sentence. A low
+# temperature trades away creativity we never wanted for the rule-following
+# consistency every agent here actually needs.
+DEFAULT_TEMPERATURE = float(os.environ.get("GEMINI_TEMPERATURE", "0.2"))
+
 T = TypeVar("T", bound=BaseModel)
 
 # Lets a UI show *why* a call is taking a while (rate-limit pacing, a 429/503
@@ -124,6 +134,7 @@ def call_agent_json(
     client: genai.Client | None = None,
     db_session: Session | None = None,
     model: str = DEFAULT_MODEL,
+    temperature: float = DEFAULT_TEMPERATURE,
 ) -> T:
     """Call Gemini with a JSON-only system prompt and validate the response.
 
@@ -134,7 +145,7 @@ def call_agent_json(
     """
     client = client or genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
 
-    response = _generate_with_retry(client, model, user_content, system_prompt)
+    response = _generate_with_retry(client, model, user_content, system_prompt, temperature)
     raw_text = response.text
 
     try:
@@ -149,7 +160,7 @@ def call_agent_json(
 
 
 def _generate_with_retry(
-    client: genai.Client, model: str, user_content: str, system_prompt: str
+    client: genai.Client, model: str, user_content: str, system_prompt: str, temperature: float
 ) -> genai_types.GenerateContentResponse:
     """Calls generate_content, pacing every attempt through the shared rate
     limiter and retrying rate-limit/overload errors with backoff: the delay
@@ -163,6 +174,7 @@ def _generate_with_retry(
                 config=genai_types.GenerateContentConfig(
                     system_instruction=system_prompt,
                     response_mime_type="application/json",
+                    temperature=temperature,
                 ),
             )
         except genai_errors.APIError as exc:
