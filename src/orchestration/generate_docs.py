@@ -35,11 +35,24 @@ def generate_documentation(
     approved_requirements: list[Requirement],
     db_session: Session,
     batch_id: str | None = None,
+    all_batch_requirements: list[Requirement] | None = None,
 ) -> tuple[list[SDLCRecommendation], DocumentationOutput]:
     """Runs SDLC selection + documentation for an already-approved requirement
     set. When batch_id is given, the recommendation is also persisted onto
-    that batch so it can be looked up again later (see the History tab)."""
-    recommendations = SDLCSelectionAgent().run(approved_requirements, db_session=db_session)
+    that batch so it can be looked up again later (see the History tab).
+
+    SDLC selection reasons over ``all_batch_requirements`` (falling back to
+    just the approved set if not given) rather than only the approved subset:
+    "approved" and "needs revision" are mutually exclusive statuses, so an
+    approved-only view always reports zero requirements needing revision and
+    can never surface the batch's real gathering-time uncertainty — the
+    signal the Spiral/high-uncertainty recommendation depends on. The SRS
+    itself is still built strictly from approved_requirements, since that's
+    the actual reviewed output."""
+    sdlc_characteristics_source = (
+        all_batch_requirements if all_batch_requirements is not None else approved_requirements
+    )
+    recommendations = SDLCSelectionAgent().run(sdlc_characteristics_source, db_session=db_session)
     output = DocumentationAgent().run(approved_requirements, recommendations, db_session=db_session)
     if batch_id is not None:
         save_batch_sdlc_recommendation(
@@ -76,7 +89,7 @@ def generate_docs() -> None:
             return
 
         recommendations, output = generate_documentation(
-            approved, session, batch_id=target_batch.id
+            approved, session, batch_id=target_batch.id, all_batch_requirements=batch_requirements
         )
     finally:
         session.close()
