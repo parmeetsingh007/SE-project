@@ -29,12 +29,12 @@ DEFAULT_TRANSCRIPT = "data/sample_inputs/transcript_step_up_auth.txt"
 
 load_dotenv()
 init_db()
-st.set_page_config(page_title="Payment Requirements Review", layout="wide", page_icon="📝")
+st.set_page_config(page_title="Payment Requirements Review", layout="wide")
 st.markdown(CSS, unsafe_allow_html=True)
 st.markdown(
     """
     <div class="app-header">
-        <h1>📝 Payment-Processing Requirements</h1>
+        <h1>Payment-Processing Requirements</h1>
         <p>Multi-agent requirement gathering, compliance mapping &amp; the human approval gate</p>
     </div>
     """,
@@ -163,7 +163,7 @@ def _render_results(recommendations, output, approved_count: int, total: int) ->
 
 
 tab_ingest, tab_review, tab_history = st.tabs(
-    ["📥 Ingest transcript", "✅ Review & approve", "🕘 History"]
+    ["Ingest transcript", "Review & approve", "History"]
 )
 
 with tab_ingest:
@@ -205,7 +205,7 @@ with tab_ingest:
 
         if last_run["stakeholder_follow_ups"]:
             with st.expander(
-                f"🎙️ Pre-extraction stakeholder follow-ups "
+                f"Pre-extraction stakeholder follow-ups "
                 f"({len(last_run['stakeholder_follow_ups'])}) — simulated adaptive "
                 f"interviewing on the static transcript"
             ):
