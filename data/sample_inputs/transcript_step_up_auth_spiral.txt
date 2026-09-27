@@ -1,0 +1,32 @@
+Stakeholder 1 — Head of Digital Payments:
+We want to add step-up authentication for any payment above a risk threshold, but honestly we haven't settled on what that threshold should be. Marketing wants it as high as possible so checkout stays frictionless; I've heard numbers anywhere from $200 to $2,000 floated and nobody has run the numbers to pick one.
+
+Stakeholder 2 — Head of Fraud & Risk:
+We can't set a fixed dollar threshold at all — fraud risk depends on device, location, transaction velocity, and customer history, not just amount. I want a dynamic risk score to decide when to step up, but we haven't built or validated that scoring model yet, so for now nobody actually knows what triggers a step-up.
+
+Stakeholder 3 — Head of Digital Payments:
+That's a problem, because I told the executive team we'd have a simple, predictable rule customers and merchants could understand. A black-box risk score that changes behavior unpredictably is going to generate support complaints we can't explain.
+
+Stakeholder 4 — Security Architect:
+On the authentication method itself, we also haven't decided. OTP over SMS is easiest to ship but everyone in security knows SIM-swap makes it weak. Push notification through our app is stronger but only works for customers who have the app installed, which is maybe 40% of our base — we don't have a firm number. We might need to support both, or something else, but we haven't prototyped any of them against real users yet.
+
+Stakeholder 5 — Compliance Officer:
+I don't yet know what RBI's guidance will require here — there's a consultation paper out but the final rules on acceptable step-up mechanisms haven't been published. We may end up needing to redesign this after the fact if our chosen method doesn't qualify as an approved second factor. I can't give you a definite compliance answer today.
+
+Stakeholder 6 — Head of Fraud & Risk:
+There's also real disagreement on false-positive tolerance. I'd rather step up too often and annoy some legitimate customers than let fraud through — the cost of one fraud case is bigger to me than ten annoyed customers.
+
+Stakeholder 7 — Head of Digital Payments:
+I disagree completely. Every extra step-up prompt measurably drops conversion, and Finance has already told me lost sales from friction could outweigh the fraud losses we're trying to prevent. We don't have real numbers on either side to settle this, it's just competing guesses right now.
+
+Stakeholder 8 — Engineering Lead:
+From a build perspective, we don't know if our current authentication service can support real-time risk scoring at checkout without adding noticeable latency. We'd need to prototype it against production-like traffic to find out, and we don't have a timeline for when that prototype could happen.
+
+Stakeholder 9 — Security Architect:
+We also haven't figured out the fallback path — what happens when a customer fails step-up, or doesn't have the second factor available at all. Do we decline the transaction, offer a different verification method, or route to manual review? Nobody's proposed an answer yet.
+
+Stakeholder 10 — Head of Fraud & Risk:
+Given how much is still unresolved — the threshold, the risk model, the authentication method, the compliance requirement, even the fallback behavior — I don't think we should commit to a full build. I'd rather we build a narrow prototype for one authentication method, test it with a small percentage of real transactions, learn what actually happens to fraud and conversion, and revisit every one of these open questions before deciding what to build next.
+
+Stakeholder 11 — Head of Digital Payments:
+Agreed, reluctantly. I can't commit to a final threshold, a final authentication method, or a final fallback flow today. Everything here depends on what we learn from an early round of testing, and I expect we'll be back to renegotiate most of these decisions once we have real data.

@@ -337,7 +337,10 @@ with tab_review:
                     session = SessionLocal()
                     try:
                         recommendations, output = generate_documentation(
-                            chosen_approved, session, batch_id=chosen_batch.id
+                            chosen_approved,
+                            session,
+                            batch_id=chosen_batch.id,
+                            all_batch_requirements=chosen_reqs,
                         )
                     except RateLimitedError:
                         st.error(
