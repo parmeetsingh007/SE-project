@@ -114,6 +114,10 @@ def _render_requirement_card(
                     st.write(f"- {criterion}")
             if req.confidence_score:
                 st.write(f"**Risk confidence:** {req.confidence_score:.0%}")
+            if req.open_questions:
+                st.write("**Open questions from extraction:**")
+                for question in req.open_questions:
+                    st.write(f"- {question}")
             for issue in clarification_issues or []:
                 st.warning(
                     f"**Needs clarification:** {issue.issue}\n\n"
