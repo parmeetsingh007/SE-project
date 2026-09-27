@@ -20,15 +20,35 @@ from dotenv import load_dotenv
 from contextlib import contextmanager
 
 from src.agents.coordinator import Coordinator
+from src.agents.doc_renderers import write_requirements_report
 from src.agents.human_approval import ApprovalDecision, apply_approval_decision
 from src.agents.llm_client import RateLimitedError, set_status_sink
 from src.agents.sdlc_selection import SDLCRecommendation
-from src.models.db import BatchORM, SessionLocal, init_db, load_batches, load_requirements
+from src.models.db import (
+    BatchORM,
+    SessionLocal,
+    get_batch,
+    init_db,
+    load_batches,
+    load_requirements,
+)
 from src.models.requirement import ApprovalStatus, Requirement
 from src.orchestration.generate_docs import generate_documentation
 from src.ui.theme import CSS, batch_badge, category_badges, risk_badge, status_badge
 
 DEFAULT_TRANSCRIPT = "data/sample_inputs/transcript_step_up_auth.txt"
+DOCS_OUTPUT_DIR = Path("docs/generated")
+
+
+def _write_requirements_report(db_session, batch_id: str) -> Path:
+    """(Re)writes the all-requirements report for one batch, grouped by
+    current approval_status. Called after every ingestion and every
+    approve/send-back/reject click so it always reflects the latest state."""
+    batch = get_batch(db_session, batch_id)
+    label = _batch_label(batch) if batch else batch_id
+    requirements = load_requirements(db_session, batch_id=batch_id)
+    DOCS_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    return write_requirements_report(DOCS_OUTPUT_DIR, batch_id, label, requirements)
 
 
 @contextmanager
@@ -147,6 +167,8 @@ def _render_requirement_card(
                     apply_approval_decision(
                         ApprovalDecision(requirement_id=req.id, decision=status), session
                     )
+                    if req.batch_id:
+                        _write_requirements_report(session, req.batch_id)
                 finally:
                     session.close()
                 # keep the in-memory "just processed" snapshot from the ingest
@@ -228,7 +250,11 @@ with tab_ingest:
             else:
                 st.session_state["last_run"] = _snapshot_run(coordinator, requirements)
                 st.session_state.pop("failed_batch_id", None)
-                st.success(f"Extracted {len(requirements)} requirements into a new batch.")
+                report_path = _write_requirements_report(session, coordinator.last_batch_id)
+                st.success(
+                    f"Extracted {len(requirements)} requirements into a new batch. "
+                    f"Requirements report: `{report_path}`"
+                )
             finally:
                 session.close()
 
@@ -252,7 +278,11 @@ with tab_ingest:
                 else:
                     st.session_state["last_run"] = _snapshot_run(coordinator, requirements)
                     st.session_state.pop("failed_batch_id", None)
-                    st.success(f"Resumed and finished {len(requirements)} requirement(s).")
+                    report_path = _write_requirements_report(session, failed_batch_id)
+                    st.success(
+                        f"Resumed and finished {len(requirements)} requirement(s). "
+                        f"Requirements report: `{report_path}`"
+                    )
                 finally:
                     session.close()
 
@@ -335,6 +365,18 @@ with tab_review:
                 "Batch to generate for", range(len(batch_groups)), format_func=lambda i: labels[i]
             )
             chosen_batch, chosen_reqs, chosen_approved = batch_groups[chosen_i]
+
+            session = SessionLocal()
+            try:
+                report_path = _write_requirements_report(session, chosen_batch.id)
+            finally:
+                session.close()
+            st.download_button(
+                "Download requirements report (all statuses)",
+                data=report_path.read_text(encoding="utf-8"),
+                file_name=report_path.name,
+                mime="text/markdown",
+            )
 
             if st.button("Generate & view results", type="primary"):
                 with _live_status("Recommending an SDLC approach and drafting the SRS..."):
