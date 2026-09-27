@@ -3,13 +3,19 @@
 Every agent asks Gemini for JSON-only output and validates it against a Pydantic
 model before returning. This module centralizes that call + parse + audit-log
 sequence so individual agent files stay focused on their own prompt and schema.
+
+Every call also goes through one process-wide rate limiter and retry policy,
+since the free tier's 15 requests/minute limit is shared across the whole
+app, not per-agent.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import threading
 import time
+from collections import deque
 from typing import TypeVar
 
 from google import genai
@@ -22,10 +28,15 @@ from src.models.db import AuditLogORM
 
 DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
 
-# The free tier's 15 requests/minute limit is easily hit mid-run now that the
-# pipeline makes ~5 calls per requirement — retry transient rate-limit (429)
-# and overload (503) errors with backoff instead of losing the whole batch
-# (Coordinator only commits requirements at the very end of run()).
+# The pipeline makes ~5-6 calls per requirement now, which for a real
+# multi-requirement transcript easily exceeds the free tier's 15 req/min on
+# its own. Two layers guard against that: a proactive limiter that paces
+# calls so the app itself never bursts past the quota, and reactive retry
+# with backoff for the 429/503s that still happen (another process sharing
+# the same key, a slightly-off window boundary, etc).
+GEMINI_RPM_LIMIT = int(os.environ.get("GEMINI_RPM_LIMIT", "15"))
+RATE_LIMIT_WINDOW_SECONDS = 60.0
+
 MAX_RATE_LIMIT_RETRIES = 6
 DEFAULT_RETRY_DELAY_SECONDS = 20.0
 MAX_RETRY_DELAY_SECONDS = 65.0
@@ -37,6 +48,41 @@ T = TypeVar("T", bound=BaseModel)
 class AgentOutputError(ValueError):
     """Raised when an agent's LLM call returns output that fails JSON parsing
     or Pydantic validation. Never swallowed — always logged and re-raised."""
+
+
+class RateLimitedError(RuntimeError):
+    """Raised when Gemini kept returning 429/503 after every retry was
+    exhausted. A distinct type so callers (the Streamlit UI) can catch just
+    this and show a clear message instead of a raw traceback."""
+
+
+class _RateLimiter:
+    """Sliding-window limiter shared by every Gemini call in the process, so
+    pacing is enforced app-wide rather than per-agent."""
+
+    def __init__(self, limit: int, window_seconds: float) -> None:
+        self.limit = limit
+        self.window_seconds = window_seconds
+        self._call_times: deque[float] = deque()
+        self._lock = threading.Lock()
+
+    def acquire(self) -> None:
+        with self._lock:
+            self._evict_expired()
+            if len(self._call_times) >= self.limit:
+                wait_for = self.window_seconds - (time.monotonic() - self._call_times[0])
+                if wait_for > 0:
+                    time.sleep(wait_for + 0.05)
+                self._evict_expired()
+            self._call_times.append(time.monotonic())
+
+    def _evict_expired(self) -> None:
+        cutoff = time.monotonic() - self.window_seconds
+        while self._call_times and self._call_times[0] < cutoff:
+            self._call_times.popleft()
+
+
+_rate_limiter = _RateLimiter(GEMINI_RPM_LIMIT, RATE_LIMIT_WINDOW_SECONDS)
 
 
 def call_agent_json(
@@ -53,7 +99,8 @@ def call_agent_json(
 
     Logs every call (input, raw output, timestamp) to the audit_log table when
     ``db_session`` is provided. Raises ``AgentOutputError`` on parse/validation
-    failure instead of silently dropping the bad output.
+    failure instead of silently dropping the bad output, and ``RateLimitedError``
+    if the quota is still exhausted after every retry.
     """
     client = client or genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
 
@@ -74,9 +121,11 @@ def call_agent_json(
 def _generate_with_retry(
     client: genai.Client, model: str, user_content: str, system_prompt: str
 ) -> genai_types.GenerateContentResponse:
-    """Calls generate_content, retrying rate-limit/overload errors with the
-    delay Gemini itself suggests (falling back to a fixed default)."""
+    """Calls generate_content, pacing every attempt through the shared rate
+    limiter and retrying rate-limit/overload errors with backoff: the delay
+    Gemini itself suggests when given, otherwise growing exponentially."""
     for attempt in range(MAX_RATE_LIMIT_RETRIES + 1):
+        _rate_limiter.acquire()
         try:
             return client.models.generate_content(
                 model=model,
@@ -87,9 +136,15 @@ def _generate_with_retry(
                 ),
             )
         except genai_errors.APIError as exc:
-            if exc.code not in RETRYABLE_STATUS_CODES or attempt >= MAX_RATE_LIMIT_RETRIES:
+            if exc.code not in RETRYABLE_STATUS_CODES:
                 raise
-            delay = _retry_delay_seconds(exc)
+            if attempt >= MAX_RATE_LIMIT_RETRIES:
+                raise RateLimitedError(
+                    f"Gemini kept returning {exc.code} after {MAX_RATE_LIMIT_RETRIES} "
+                    "retries. The free-tier quota is likely still exhausted — wait a "
+                    "minute and try again."
+                ) from exc
+            delay = _retry_delay_seconds(exc, attempt)
             print(
                 f"[llm_client] Gemini returned {exc.code}, retrying in {delay:.0f}s "
                 f"(attempt {attempt + 1}/{MAX_RATE_LIMIT_RETRIES})..."
@@ -98,9 +153,11 @@ def _generate_with_retry(
     raise AssertionError("unreachable")  # loop always returns or raises
 
 
-def _retry_delay_seconds(exc: genai_errors.APIError) -> float:
-    """Parses the server-suggested retry delay (e.g. RetryInfo.retryDelay =
-    "56s") out of a Gemini error, falling back to a fixed default."""
+def _retry_delay_seconds(exc: genai_errors.APIError, attempt: int) -> float:
+    """Uses the server-suggested retry delay (RetryInfo.retryDelay, e.g.
+    "56s") when Gemini provides one — that's an exact answer, no need to
+    guess. Otherwise backs off exponentially, since a 503 overload rarely
+    comes with a RetryInfo hint."""
     try:
         details = exc.details.get("error", {}).get("details", [])
         for item in details:
@@ -110,7 +167,7 @@ def _retry_delay_seconds(exc: genai_errors.APIError) -> float:
                     return min(float(raw[:-1]) + 2, MAX_RETRY_DELAY_SECONDS)
     except (AttributeError, TypeError, ValueError):
         pass
-    return DEFAULT_RETRY_DELAY_SECONDS
+    return min(DEFAULT_RETRY_DELAY_SECONDS * (2**attempt), MAX_RETRY_DELAY_SECONDS)
 
 
 def _log_call(

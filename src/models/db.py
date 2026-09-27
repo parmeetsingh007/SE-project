@@ -6,7 +6,7 @@ import os
 from collections.abc import Generator
 from datetime import datetime, timezone
 
-from sqlalchemy import JSON, DateTime, Float, String, create_engine, text
+from sqlalchemy import JSON, Boolean, DateTime, Float, String, create_engine, text
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
 from src.models.requirement import Requirement
@@ -48,6 +48,12 @@ class RequirementORM(Base):
     risk_level: Mapped[str | None] = mapped_column(String, nullable=True)
     confidence_score: Mapped[float] = mapped_column(Float, default=0.0)
     approval_status: Mapped[str] = mapped_column(String, default="pending")
+    source_excerpt: Mapped[str] = mapped_column(String, default="")
+    open_questions: Mapped[list] = mapped_column(JSON, default=list)
+    # True once this requirement has been through compliance/clarification/
+    # security/acceptance-criteria/risk-analysis — lets Coordinator.resume()
+    # skip requirements a previous, interrupted run already finished.
+    processing_complete: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class BatchORM(Base):
@@ -86,8 +92,9 @@ def init_db() -> None:
 
 
 def _migrate_legacy_requirements() -> None:
-    """Adds requirements.batch_id if missing, backfills it with
-    LEGACY_BATCH_ID, and ensures a matching batch row exists."""
+    """Adds any requirements columns introduced after a database was first
+    created (batch_id, and later source_excerpt/open_questions/
+    processing_complete), backfilling sensible defaults for existing rows."""
     with engine.connect() as conn:
         columns = [row[1] for row in conn.execute(text("PRAGMA table_info(requirements)"))]
         if "batch_id" not in columns:
@@ -96,7 +103,24 @@ def _migrate_legacy_requirements() -> None:
                 text("UPDATE requirements SET batch_id = :legacy WHERE batch_id IS NULL"),
                 {"legacy": LEGACY_BATCH_ID},
             )
-            conn.commit()
+        if "source_excerpt" not in columns:
+            conn.execute(text("ALTER TABLE requirements ADD COLUMN source_excerpt VARCHAR"))
+            conn.execute(text("UPDATE requirements SET source_excerpt = '' WHERE source_excerpt IS NULL"))
+        if "open_questions" not in columns:
+            conn.execute(text("ALTER TABLE requirements ADD COLUMN open_questions JSON"))
+            conn.execute(text("UPDATE requirements SET open_questions = '[]' WHERE open_questions IS NULL"))
+        if "processing_complete" not in columns:
+            conn.execute(text("ALTER TABLE requirements ADD COLUMN processing_complete BOOLEAN"))
+            # Pre-existing rows were persisted by the old all-at-once flow, so
+            # by definition they already finished the full per-requirement
+            # agent loop — mark them complete rather than eligible for resume.
+            conn.execute(
+                text(
+                    "UPDATE requirements SET processing_complete = 1 "
+                    "WHERE processing_complete IS NULL"
+                )
+            )
+        conn.commit()
 
     session = SessionLocal()
     try:
@@ -132,6 +156,28 @@ def load_requirements(db_session: Session, batch_id: str | None = None) -> list[
     if batch_id is not None:
         query = query.filter_by(batch_id=batch_id)
     return [Requirement.model_validate(row, from_attributes=True) for row in query.all()]
+
+
+def create_requirements(db_session: Session, requirements: list[Requirement]) -> None:
+    """Inserts newly extracted requirements. Called right after classification
+    — a checkpoint so a crash during the (expensive, per-requirement) agent
+    loop that follows doesn't lose extraction/classification work too."""
+    for requirement in requirements:
+        db_session.add(RequirementORM(**requirement.model_dump(mode="json")))
+    db_session.commit()
+
+
+def update_requirement(db_session: Session, requirement: Requirement) -> None:
+    """Writes one requirement's current state back to its existing row. Used
+    to checkpoint progress after each requirement finishes the per-requirement
+    agent loop, so Coordinator.resume() has an accurate picture of what's
+    already done."""
+    row = db_session.get(RequirementORM, requirement.id)
+    if row is None:
+        raise ValueError(f"Requirement {requirement.id} not found")
+    for field, value in requirement.model_dump(mode="json").items():
+        setattr(row, field, value)
+    db_session.commit()
 
 
 def create_batch(db_session: Session, batch_id: str, transcript_preview: str) -> None:
