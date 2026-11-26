@@ -1,0 +1,3822 @@
+{
+ "demo_id": "stable_kyc_refresh",
+ "project": {
+  "name": "Periodic KYC refresh programme",
+  "description": "A bank must refresh KYC for existing customers on the regulator's schedule. Requirements are firm, regulated and unlikely to change. Good for showing a plan-driven recommendation (V-Model or Waterfall).",
+  "jurisdictions": [
+   "IN",
+   "GLOBAL"
+  ]
+ },
+ "documents": [
+  {
+   "title": "01 Policy Extract",
+   "source_type": "policy",
+   "role": "Compliance officer",
+   "masked_text": "Board-approved KYC Refresh Policy, version 3.1 (final, approved)\n\n1. Customers rated high risk must have their KYC information updated at least every 2 years, medium risk every 8 years and low risk every 10 years.\n2. The bank must notify each customer at least 30 days before the due date by SMS and email, and again at 7 days.\n3. Customers may confirm that their details are unchanged through a self-declaration in the mobile app or net banking, without visiting a branch.\n4. Where the address has changed, a proof of the new address must be collected and verified.\n5. Updated KYC records must be uploaded to the Central KYC Records Registry within 10 days.\n6. Accounts must not be frozen for a missing update until two reminders have been sent and 30 days have passed after the due date. Every freeze must be approved by a branch manager and recorded.\n7. All KYC records and refresh evidence must be retained for at least 5 years after the relationship ends and be retrievable within 24 hours for an auditor.\n8. Customer identifiers must be encrypted at rest and masked on every screen except for authorised compliance staff.\n",
+   "pii_found": {},
+   "injection": []
+  },
+  {
+   "title": "02 Business Requirements",
+   "source_type": "requirements doc",
+   "role": "Business analyst",
+   "masked_text": "Business requirements document (final), KYC Refresh Programme, owner: Meera Shah (Business Analyst)\n\nThe programme covers all 2.4 million existing retail customers over 24 months. Scope, policy and the regulator's schedule are fixed and have been signed off by the steering committee.\n\nBR-1: The system shall calculate each customer's next KYC due date from the risk category.\nBR-2: The system shall send reminders at 30 days and 7 days before the due date.\nBR-3: The system shall let a customer submit a self-declaration through the mobile app and net banking.\nBR-4: The system shall support address-change proof upload and verification by an operations officer within 2 business days.\nBR-5: The system shall submit refreshed records to the central KYC registry within 10 days.\nBR-6: The system shall record every account freeze together with the approving branch manager.\nBR-7: The system shall produce a monthly compliance report of due, completed and overdue refreshes.\nThe existing core banking and CRM platforms remain unchanged and are accessed through the approved integration layer.\n",
+   "pii_found": {},
+   "injection": []
+  }
+ ],
+ "requirements": [
+  {
+   "id": "e05616d9-8e86-4298-8ef5-db65f69d5ccd",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-REG-001",
+   "statement": "The system shall update KYC information for high-risk customers at least every 2 years.",
+   "categories": [
+    "regulatory",
+    "data"
+   ],
+   "primary_category": "regulatory",
+   "source_stakeholder": "Compliance officer",
+   "source_document": "01 Policy Extract",
+   "source_excerpt": "Customers rated high risk must have their KYC information updated at least every 2 years",
+   "business_justification": null,
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a high-risk customer, When the last KYC update is older than 2 years, Then the system shall flag the account for mandatory update."
+   ],
+   "regulations": [
+    {
+     "regulation": "RBI KYC Master Direction",
+     "clause_id": "RBI-KYC-REKYC",
+     "citation": "RBI KYC Master Direction: Periodic updation (re-KYC)",
+     "jurisdiction": "IN",
+     "confidence": 1.0,
+     "rationale": "The clause explicitly mandates periodic KYC updates for high-risk customers at least every two years.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.96,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "65d47b27-e9d4-4391-b9e1-b0792ad311f5",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-REG-002",
+   "statement": "The system shall update KYC information for medium-risk customers at least every 8 years.",
+   "categories": [
+    "regulatory",
+    "data"
+   ],
+   "primary_category": "regulatory",
+   "source_stakeholder": "Compliance officer",
+   "source_document": "01 Policy Extract",
+   "source_excerpt": "medium risk every 8 years",
+   "business_justification": null,
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a medium-risk customer, When the last KYC update is older than 8 years, Then the system shall flag the account for mandatory update."
+   ],
+   "regulations": [
+    {
+     "regulation": "RBI KYC Master Direction",
+     "clause_id": "RBI-KYC-REKYC",
+     "citation": "RBI KYC Master Direction: Periodic updation (re-KYC)",
+     "jurisdiction": "IN",
+     "confidence": 1.0,
+     "rationale": "The clause explicitly mandates periodic KYC updates for medium-risk customers at least every eight years.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 4.0,
+    "score": 8.0
+   },
+   "confidence_score": 0.96,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "4fcdd662-484c-4984-9dc3-f6785d8f9b93",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-REG-003",
+   "statement": "The system shall update KYC information for low-risk customers at least every 10 years.",
+   "categories": [
+    "regulatory",
+    "data"
+   ],
+   "primary_category": "regulatory",
+   "source_stakeholder": "Compliance officer",
+   "source_document": "01 Policy Extract",
+   "source_excerpt": "low risk every 10 years",
+   "business_justification": null,
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a low-risk customer, When the last KYC update is older than 10 years, Then the system shall flag the account for mandatory update."
+   ],
+   "regulations": [
+    {
+     "regulation": "RBI KYC Master Direction",
+     "clause_id": "RBI-KYC-REKYC",
+     "citation": "RBI KYC Master Direction: Periodic updation (re-KYC)",
+     "jurisdiction": "IN",
+     "confidence": 1.0,
+     "rationale": "The clause explicitly mandates periodic KYC updates for low-risk customers at least every ten years.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "low",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 3.0,
+    "score": 6.0
+   },
+   "confidence_score": 0.96,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "60a93a48-0f51-4ad5-b49a-45e4492f8825",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-UX-001",
+   "statement": "The system shall notify customers via SMS and email at least 30 days before the KYC due date.",
+   "categories": [
+    "usability",
+    "functional"
+   ],
+   "primary_category": "usability",
+   "source_stakeholder": "Compliance officer",
+   "source_document": "01 Policy Extract",
+   "source_excerpt": "The bank must notify each customer at least 30 days before the due date by SMS and email",
+   "business_justification": null,
+   "priority": "medium",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a customer with a KYC due date, When the current date is 30 days before the due date, Then the system shall trigger an SMS and email notification."
+   ],
+   "regulations": [],
+   "risk_level": "low",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 2.0,
+    "score": 4.0
+   },
+   "confidence_score": 0.81,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "1ba93533-3bbb-41ca-8da3-be9f5ec59664",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-UX-002",
+   "statement": "The system shall notify customers via SMS and email 7 days before the KYC due date.",
+   "categories": [
+    "usability",
+    "functional"
+   ],
+   "primary_category": "usability",
+   "source_stakeholder": "Compliance officer",
+   "source_document": "01 Policy Extract",
+   "source_excerpt": "and again at 7 days.",
+   "business_justification": null,
+   "priority": "medium",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a customer with a KYC due date, When the current date is 7 days before the due date, Then the system shall trigger an SMS and email notification."
+   ],
+   "regulations": [],
+   "risk_level": "low",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 2.0,
+    "score": 4.0
+   },
+   "confidence_score": 0.81,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "add21532-d623-47e2-b393-a4ac435e0b87",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-UX-003",
+   "statement": "The system shall provide a self-declaration feature in the mobile app and net banking for customers to confirm unchanged details.",
+   "categories": [
+    "usability",
+    "functional"
+   ],
+   "primary_category": "usability",
+   "source_stakeholder": "Compliance officer",
+   "source_document": "01 Policy Extract",
+   "source_excerpt": "Customers may confirm that their details are unchanged through a self-declaration in the mobile app or net banking, without visiting a branch.",
+   "business_justification": "Avoid visiting a branch",
+   "priority": "medium",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a customer logged into the mobile app or net banking, When they access the KYC section, Then the system shall provide a self-declaration feature to confirm unchanged details."
+   ],
+   "regulations": [],
+   "risk_level": "low",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 2.0,
+    "score": 4.0
+   },
+   "confidence_score": 0.81,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "310c7216-3cf9-4c7f-ab9e-12f58b2421e1",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-REG-004",
+   "statement": "The system shall collect and verify proof of address when a customer reports an address change.",
+   "categories": [
+    "regulatory",
+    "functional"
+   ],
+   "primary_category": "regulatory",
+   "source_stakeholder": "Compliance officer",
+   "source_document": "01 Policy Extract",
+   "source_excerpt": "Where the address has changed, a proof of the new address must be collected and verified.",
+   "business_justification": null,
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a customer reporting an address change, When the change is submitted, Then the system shall require the upload of proof of address and initiate a verification workflow."
+   ],
+   "regulations": [],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 4.0,
+    "score": 16.0
+   },
+   "confidence_score": 0.53,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Verification method is not defined."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Method of verification is not specified"
+   ],
+   "history": []
+  },
+  {
+   "id": "e7ad9f8c-ff7b-4a21-ad27-79d6f36f2bd9",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-REG-005",
+   "statement": "The system shall upload updated KYC records to the Central KYC Records Registry within 10 days.",
+   "categories": [
+    "regulatory",
+    "integration"
+   ],
+   "primary_category": "regulatory",
+   "source_stakeholder": "Compliance officer",
+   "source_document": "01 Policy Extract",
+   "source_excerpt": "Updated KYC records must be uploaded to the Central KYC Records Registry within 10 days.",
+   "business_justification": null,
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given an updated KYC record, When the record is finalized, Then the system shall transmit the data to the Central KYC Records Registry within 10 days."
+   ],
+   "regulations": [
+    {
+     "regulation": "RBI KYC Master Direction",
+     "clause_id": "RBI-KYC-CKYCR",
+     "citation": "RBI KYC Master Direction: Central KYC Records Registry",
+     "jurisdiction": "IN",
+     "confidence": 0.8,
+     "rationale": "The clause requires uploading KYC records to the CKYCR within a prescribed period, which supports the requirement for timely registry updates.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 5.0,
+    "score": 20.0
+   },
+   "confidence_score": 0.62,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "ambiguity",
+     "detail": "Does '10 days' refer to calendar or business days?"
+    }
+   ],
+   "is_weak": true,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "b1f2b785-4003-4957-941e-de36d8ddeb7a",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-REG-006",
+   "statement": "The system shall prevent account freezing for missing updates until two reminders have been sent and 30 days have passed after the due date.",
+   "categories": [
+    "regulatory",
+    "functional"
+   ],
+   "primary_category": "regulatory",
+   "source_stakeholder": "Compliance officer",
+   "source_document": "01 Policy Extract",
+   "source_excerpt": "Accounts must not be frozen for a missing update until two reminders have been sent and 30 days have passed after the due date.",
+   "business_justification": null,
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a customer with an expired KYC, When the account is pending freeze, Then the system shall verify that two reminders were sent and at least 30 days have elapsed since the due date before allowing the freeze."
+   ],
+   "regulations": [
+    {
+     "regulation": "RBI KYC Master Direction",
+     "clause_id": "RBI-KYC-REKYC",
+     "citation": "RBI KYC Master Direction: Periodic updation (re-KYC)",
+     "jurisdiction": "IN",
+     "confidence": 0.9,
+     "rationale": "The clause mandates that accounts must not be closed without notice for missing updates, supporting the requirement for a grace period and notification process.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 4.0,
+    "score": 8.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "a9fa9a1e-1e9e-47d2-84a7-28e15ec0b0ae",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-SEC-001",
+   "statement": "The system shall require branch manager approval for every account freeze and record the approval.",
+   "categories": [
+    "security",
+    "audit",
+    "operational"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "Compliance officer",
+   "source_document": "01 Policy Extract",
+   "source_excerpt": "Every freeze must be approved by a branch manager and recorded.",
+   "business_justification": null,
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given an account freeze request, When the request is processed, Then the system shall require and store the digital signature or ID of the approving branch manager."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 4.0,
+    "score": 8.0
+   },
+   "confidence_score": 0.81,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "235f2dfb-c432-4c4f-98b2-5551b59bf16d",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-REG-007",
+   "statement": "The system shall retain KYC records and refresh evidence for at least 5 years after the relationship ends.",
+   "categories": [
+    "regulatory",
+    "data"
+   ],
+   "primary_category": "regulatory",
+   "source_stakeholder": "Compliance officer",
+   "source_document": "01 Policy Extract",
+   "source_excerpt": "All KYC records and refresh evidence must be retained for at least 5 years after the relationship ends",
+   "business_justification": null,
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a customer whose relationship has ended, When 5 years have passed, Then the system shall retain the records until the end of this period."
+   ],
+   "regulations": [
+    {
+     "regulation": "RBI KYC Master Direction",
+     "clause_id": "RBI-KYC-RETAIN",
+     "citation": "RBI KYC Master Direction: Record retention",
+     "jurisdiction": "IN",
+     "confidence": 1.0,
+     "rationale": "The clause explicitly mandates the preservation of identification records for at least five years after the business relationship ends.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 4.0,
+    "score": 8.0
+   },
+   "confidence_score": 0.96,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "9611e821-90d9-4b28-9f6c-6a7d98856577",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-AUD-001",
+   "statement": "The system shall ensure KYC records and refresh evidence are retrievable within 24 hours for an auditor.",
+   "categories": [
+    "audit",
+    "performance"
+   ],
+   "primary_category": "audit",
+   "source_stakeholder": "Compliance officer",
+   "source_document": "01 Policy Extract",
+   "source_excerpt": "and be retrievable within 24 hours for an auditor.",
+   "business_justification": null,
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given an auditor request, When the request is made for specific KYC records, Then the system shall provide the data within 24 hours."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 4.0,
+    "score": 8.0
+   },
+   "confidence_score": 0.81,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "1370b93f-29e0-404a-b2f8-b18f55d7f348",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-SEC-002",
+   "statement": "The system shall encrypt customer identifiers at rest.",
+   "categories": [
+    "security",
+    "privacy"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "Compliance officer",
+   "source_document": "01 Policy Extract",
+   "source_excerpt": "Customer identifiers must be encrypted at rest",
+   "business_justification": null,
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given stored customer identifiers, When the database is inspected, Then the identifiers shall be encrypted at rest."
+   ],
+   "regulations": [
+    {
+     "regulation": "DPDP Act 2023",
+     "clause_id": "DPDP-SAFEGUARDS",
+     "citation": "DPDP Act 2023: Reasonable security safeguards",
+     "jurisdiction": "IN",
+     "confidence": 0.9,
+     "rationale": "The clause requires data fiduciaries to implement reasonable security safeguards, including encryption, to protect personal data.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "a88bc308-871a-4961-a439-b567a1cc3653",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-PRV-001",
+   "statement": "The system shall mask customer identifiers on every screen except for authorised compliance staff.",
+   "categories": [
+    "security",
+    "privacy"
+   ],
+   "primary_category": "privacy",
+   "source_stakeholder": "Compliance officer",
+   "source_document": "01 Policy Extract",
+   "source_excerpt": "and masked on every screen except for authorised compliance staff.",
+   "business_justification": null,
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a user viewing customer data, When the user is not authorized compliance staff, Then the system shall mask all customer identifiers."
+   ],
+   "regulations": [],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 4.0,
+    "score": 16.0
+   },
+   "confidence_score": 0.53,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "undefined_term",
+     "detail": "Authorised compliance staff is not defined."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Definition of authorised compliance staff"
+   ],
+   "history": []
+  },
+  {
+   "id": "14f8efc6-d759-4ffa-a94f-665c3f5dd8e5",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-FR-001",
+   "statement": "The system shall calculate each customer's next KYC due date from the risk category.",
+   "categories": [
+    "functional",
+    "business"
+   ],
+   "primary_category": "functional",
+   "source_stakeholder": "Meera Shah (Business Analyst)",
+   "source_document": "02 Business Requirements",
+   "source_excerpt": "BR-1: The system shall calculate each customer's next KYC due date from the risk category.",
+   "business_justification": null,
+   "priority": "medium",
+   "dependencies": [],
+   "assumptions": [
+    "Risk categories are already defined in the system"
+   ],
+   "acceptance_criteria": [
+    "Given a customer's risk category, When the system processes the profile, Then the next KYC due date shall be calculated based on the category-specific interval."
+   ],
+   "regulations": [
+    {
+     "regulation": "RBI KYC Master Direction",
+     "clause_id": "RBI-KYC-RISK",
+     "citation": "RBI KYC Master Direction: Risk-based customer categorisation",
+     "jurisdiction": "IN",
+     "confidence": 0.9,
+     "rationale": "The clause requires categorizing customers by risk, which is the necessary prerequisite for calculating risk-based KYC due dates.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 4.0,
+    "score": 16.0
+   },
+   "confidence_score": 0.66,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "The calculation logic is missing."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "The specific logic or formula for calculating the due date based on risk category"
+   ],
+   "history": []
+  },
+  {
+   "id": "7b126abf-8575-44d3-97ce-74ad9b13a5ac",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-FR-002",
+   "statement": "The system shall send reminders at 30 days and 7 days before the due date.",
+   "categories": [
+    "functional",
+    "usability"
+   ],
+   "primary_category": "functional",
+   "source_stakeholder": "Meera Shah (Business Analyst)",
+   "source_document": "02 Business Requirements",
+   "source_excerpt": "BR-2: The system shall send reminders at 30 days and 7 days before the due date.",
+   "business_justification": null,
+   "priority": "medium",
+   "dependencies": [],
+   "assumptions": [
+    "Communication channels for reminders are available"
+   ],
+   "acceptance_criteria": [
+    "Given a KYC due date, When the date is 30 days or 7 days away, Then the system shall dispatch the respective reminder via SMS and email."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 3.0,
+    "score": 12.0
+   },
+   "confidence_score": 0.53,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Communication channels are not specified."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "The medium of the reminder (e.g., email, SMS, push notification)"
+   ],
+   "history": []
+  },
+  {
+   "id": "8fba3424-a196-412e-a7b5-db66c3b4d23f",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-UX-004",
+   "statement": "The system shall let a customer submit a self-declaration through the mobile app and net banking.",
+   "categories": [
+    "functional",
+    "usability"
+   ],
+   "primary_category": "usability",
+   "source_stakeholder": "Meera Shah (Business Analyst)",
+   "source_document": "02 Business Requirements",
+   "source_excerpt": "BR-3: The system shall let a customer submit a self-declaration through the mobile app and net banking.",
+   "business_justification": null,
+   "priority": "medium",
+   "dependencies": [],
+   "assumptions": [
+    "Mobile app and net banking platforms are ready to integrate this feature"
+   ],
+   "acceptance_criteria": [
+    "Given a customer, When they use the mobile app or net banking, Then they shall be able to submit a self-declaration of KYC status."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 2.0,
+    "score": 8.0
+   },
+   "confidence_score": 0.53,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Format and content of self-declaration are missing."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "The format and content requirements of the self-declaration"
+   ],
+   "history": []
+  },
+  {
+   "id": "c98adebc-1411-4640-baf7-40cd16e04ceb",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-FR-003",
+   "statement": "The system shall support address-change proof upload.",
+   "categories": [
+    "functional",
+    "data"
+   ],
+   "primary_category": "functional",
+   "source_stakeholder": "Meera Shah (Business Analyst)",
+   "source_document": "02 Business Requirements",
+   "source_excerpt": "BR-4: The system shall support address-change proof upload and verification by an operations officer within 2 business days.",
+   "business_justification": null,
+   "priority": "medium",
+   "dependencies": [],
+   "assumptions": [
+    "Users have the ability to digitize proof documents"
+   ],
+   "acceptance_criteria": [
+    "Given a customer updating their address, When they access the system, Then they shall be provided with an interface to upload proof of address."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 3.0,
+    "score": 12.0
+   },
+   "confidence_score": 0.53,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Technical constraints for file uploads are missing."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Accepted file formats and size limits for uploads"
+   ],
+   "history": []
+  },
+  {
+   "id": "2fa103e1-94aa-491b-97ff-1248205031b5",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-PERF-001",
+   "statement": "The system shall support verification of address-change proof by an operations officer within 2 business days.",
+   "categories": [
+    "performance",
+    "operational"
+   ],
+   "primary_category": "performance",
+   "source_stakeholder": "Meera Shah (Business Analyst)",
+   "source_document": "02 Business Requirements",
+   "source_excerpt": "BR-4: The system shall support address-change proof upload and verification by an operations officer within 2 business days.",
+   "business_justification": null,
+   "priority": "medium",
+   "dependencies": [],
+   "assumptions": [
+    "Operations officers have access to the system"
+   ],
+   "acceptance_criteria": [
+    "Given an uploaded proof-of-address document, When an operations officer reviews it, Then the system shall allow completion of verification within 2 business days."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 3.0,
+    "score": 12.0
+   },
+   "confidence_score": 0.53,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Workflow for verification is missing."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "The workflow for the operations officer to perform the verification"
+   ],
+   "history": []
+  },
+  {
+   "id": "4f428200-be08-477f-b722-5bc713e77695",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-REG-008",
+   "statement": "The system shall submit refreshed records to the central KYC registry within 10 days.",
+   "categories": [
+    "regulatory",
+    "integration"
+   ],
+   "primary_category": "regulatory",
+   "source_stakeholder": "Meera Shah (Business Analyst)",
+   "source_document": "02 Business Requirements",
+   "source_excerpt": "BR-5: The system shall submit refreshed records to the central KYC registry within 10 days.",
+   "business_justification": null,
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [
+    "An interface to the central KYC registry exists",
+    "The registry accepts automated submissions"
+   ],
+   "acceptance_criteria": [
+    "Given a refreshed KYC record, When the record is updated, Then the system shall submit the record to the central registry within 10 days."
+   ],
+   "regulations": [
+    {
+     "regulation": "RBI KYC Master Direction",
+     "clause_id": "RBI-KYC-CKYCR",
+     "citation": "RBI KYC Master Direction: Central KYC Records Registry",
+     "jurisdiction": "IN",
+     "confidence": 0.8,
+     "rationale": "The clause requires uploading KYC records to the CKYCR, which applies to refreshed records as part of the ongoing KYC process.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 5.0,
+    "score": 20.0
+   },
+   "confidence_score": 0.62,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "ambiguity",
+     "detail": "10 days is ambiguous regarding calendar vs business days."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Whether the 10 days refers to calendar days or business days"
+   ],
+   "history": []
+  },
+  {
+   "id": "9108d481-3fed-47fe-b237-179491456801",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-AUD-002",
+   "statement": "The system shall record every account freeze together with the approving branch manager.",
+   "categories": [
+    "audit",
+    "functional"
+   ],
+   "primary_category": "audit",
+   "source_stakeholder": "Meera Shah (Business Analyst)",
+   "source_document": "02 Business Requirements",
+   "source_excerpt": "BR-6: The system shall record every account freeze together with the approving branch manager.",
+   "business_justification": null,
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [
+    "Account freezes are performed within the system"
+   ],
+   "acceptance_criteria": [
+    "Given an account freeze event, When the event is logged, Then the system shall record the identity of the approving branch manager."
+   ],
+   "regulations": [
+    {
+     "regulation": "RBI KYC Master Direction",
+     "clause_id": "RBI-KYC-MONITOR",
+     "citation": "RBI KYC Master Direction: Ongoing transaction monitoring",
+     "jurisdiction": "IN",
+     "confidence": 0.7,
+     "rationale": "The clause requires documented alert handling, which supports the requirement to record the approval process for account freezes.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 4.0,
+    "score": 16.0
+   },
+   "confidence_score": 0.59,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Data fields for branch manager record are missing."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "The specific data fields to be captured for the branch manager"
+   ],
+   "history": []
+  },
+  {
+   "id": "9605603b-3d6d-469a-9d9f-7fe53fabd678",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-AUD-003",
+   "statement": "The system shall produce a monthly compliance report of due, completed and overdue refreshes.",
+   "categories": [
+    "audit",
+    "regulatory"
+   ],
+   "primary_category": "audit",
+   "source_stakeholder": "Meera Shah (Business Analyst)",
+   "source_document": "02 Business Requirements",
+   "source_excerpt": "BR-7: The system shall produce a monthly compliance report of due, completed and overdue refreshes.",
+   "business_justification": null,
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [
+    "Reporting data is available in the system"
+   ],
+   "acceptance_criteria": [
+    "Given the end of a month, When the compliance report is generated, Then the system shall include lists of due, completed, and overdue refreshes."
+   ],
+   "regulations": [
+    {
+     "regulation": "RBI KYC Master Direction",
+     "clause_id": "RBI-KYC-MONITOR",
+     "citation": "RBI KYC Master Direction: Ongoing transaction monitoring",
+     "jurisdiction": "IN",
+     "confidence": 0.7,
+     "rationale": "The clause requires ongoing monitoring and documented alert handling, which necessitates reporting on the status of KYC refreshes.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 3.0,
+    "score": 12.0
+   },
+   "confidence_score": 0.59,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Report format is not specified."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "The format of the report (e.g., PDF, CSV, dashboard)"
+   ],
+   "history": []
+  },
+  {
+   "id": "24dcc8c8-d0e6-4b41-adb4-11a66dc55afb",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-INT-001",
+   "statement": "The system shall access existing core banking and CRM platforms through the approved integration layer.",
+   "categories": [
+    "integration",
+    "security"
+   ],
+   "primary_category": "integration",
+   "source_stakeholder": "Meera Shah (Business Analyst)",
+   "source_document": "02 Business Requirements",
+   "source_excerpt": "The existing core banking and CRM platforms remain unchanged and are accessed through the approved integration layer.",
+   "business_justification": "The existing core banking and CRM platforms remain unchanged",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [
+    "The approved integration layer provides all necessary data access"
+   ],
+   "acceptance_criteria": [
+    "Given a request for core banking or CRM data, When the system retrieves the data, Then it shall use the approved integration layer."
+   ],
+   "regulations": [],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 5.0,
+    "score": 20.0
+   },
+   "confidence_score": 0.53,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "undefined_term",
+     "detail": "Approved integration layer is not defined."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Technical specifications of the integration layer"
+   ],
+   "history": []
+  },
+  {
+   "id": "f5bf2ff6-7fab-44df-ab07-0e373ad0990d",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-FR-004",
+   "statement": "The system shall screen customers and related parties against applicable sanctions lists at onboarding and whenever the lists are updated, and hold the account until potential matches are resolved.",
+   "categories": [
+    "functional",
+    "regulatory"
+   ],
+   "primary_category": "functional",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by FATF Recommendations.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a customer onboarding or list update, When the customer is screened against sanctions lists, Then the system shall hold the account if a potential match is found until resolution."
+   ],
+   "regulations": [
+    {
+     "regulation": "FATF Recommendations",
+     "clause_id": "FATF-R6",
+     "citation": "FATF Recommendations: Targeted financial sanctions (R.6)",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-SANCTIONS] Mandatory control with no covering requirement: Sanctions and watchlist screening.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "66420eeb-7087-41a3-9391-b598d876b6ad",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-FR-005",
+   "statement": "The system shall identify politically exposed persons during onboarding and require senior management approval before activating their accounts.",
+   "categories": [
+    "functional",
+    "regulatory"
+   ],
+   "primary_category": "functional",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by FATF Recommendations, RBI KYC Master Direction.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a PEP customer, When onboarding, Then the system shall require senior management approval before account activation."
+   ],
+   "regulations": [
+    {
+     "regulation": "FATF Recommendations",
+     "clause_id": "FATF-R12",
+     "citation": "FATF Recommendations: Politically exposed persons (R.12)",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": true
+    },
+    {
+     "regulation": "RBI KYC Master Direction",
+     "clause_id": "RBI-KYC-EDD",
+     "citation": "RBI KYC Master Direction: Enhanced due diligence and PEPs",
+     "jurisdiction": "IN",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": true
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-PEP] Mandatory control with no covering requirement: PEP identification and senior approval.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "a34fee90-a453-45e8-8627-abefc6bfb302",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-FR-006",
+   "statement": "The system shall identify and verify the beneficial owners of every legal-entity customer and record the ownership structure.",
+   "categories": [
+    "functional",
+    "regulatory",
+    "data"
+   ],
+   "primary_category": "functional",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by FATF Recommendations, RBI KYC Master Direction.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a legal-entity customer, When onboarding, Then the system shall capture and store the beneficial ownership structure."
+   ],
+   "regulations": [
+    {
+     "regulation": "RBI KYC Master Direction",
+     "clause_id": "RBI-KYC-UBO",
+     "citation": "RBI KYC Master Direction: Beneficial ownership of legal entities",
+     "jurisdiction": "IN",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": true
+    },
+    {
+     "regulation": "FATF Recommendations",
+     "clause_id": "FATF-R24",
+     "citation": "FATF Recommendations: Transparency of beneficial ownership (R.24-25)",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": true
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-UBO] Mandatory control with no covering requirement: Beneficial ownership of legal entities.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "15df064b-6d67-45d5-b87c-06410e34b429",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-FR-007",
+   "statement": "The system shall trigger enhanced due diligence, including additional evidence and compliance approval, for customers categorised as high risk.",
+   "categories": [
+    "functional",
+    "regulatory"
+   ],
+   "primary_category": "functional",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by FATF Recommendations, RBI KYC Master Direction.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a high-risk customer, When the KYC process is triggered, Then the system shall mandate enhanced due diligence and compliance approval."
+   ],
+   "regulations": [
+    {
+     "regulation": "RBI KYC Master Direction",
+     "clause_id": "RBI-KYC-EDD",
+     "citation": "RBI KYC Master Direction: Enhanced due diligence and PEPs",
+     "jurisdiction": "IN",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": true
+    },
+    {
+     "regulation": "FATF Recommendations",
+     "clause_id": "FATF-R12",
+     "citation": "FATF Recommendations: Politically exposed persons (R.12)",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": true
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-EDD] Mandatory control with no covering requirement: Enhanced due diligence for high-risk customers.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "6b552537-c8cd-4b68-8691-de07d9cb011b",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-PRV-002",
+   "statement": "The system shall present a clear privacy notice and capture the customer's recorded consent, with timestamp and purpose, before collecting identity data or biometrics.",
+   "categories": [
+    "privacy",
+    "regulatory"
+   ],
+   "primary_category": "privacy",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by Aadhaar Act 2016 and UIDAI circulars, DPDP Act 2023.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a new data collection event, When the customer is presented with the privacy notice, Then the system shall capture and timestamp the customer's consent."
+   ],
+   "regulations": [
+    {
+     "regulation": "DPDP Act 2023",
+     "clause_id": "DPDP-CONSENT",
+     "citation": "DPDP Act 2023: Notice and consent for personal data",
+     "jurisdiction": "IN",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": true
+    },
+    {
+     "regulation": "Aadhaar Act 2016 and UIDAI circulars",
+     "clause_id": "AADHAAR-ACT",
+     "citation": "Aadhaar Act 2016 and UIDAI circulars: Handling of Aadhaar numbers",
+     "jurisdiction": "IN",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-CONSENT] Mandatory control with no covering requirement: Notice and consent for personal data.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "e4581f1c-c68c-4e52-9f5b-e05fbbbd669f",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-FR-008",
+   "statement": "The system shall let compliance staff raise and file suspicious transaction reports within the regulatory deadline without notifying the customer.",
+   "categories": [
+    "functional",
+    "regulatory",
+    "audit"
+   ],
+   "primary_category": "functional",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by FATF Recommendations, PMLA 2002 and PML Rules.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a suspicious transaction, When compliance staff file a report, Then the system shall allow submission without notifying the customer."
+   ],
+   "regulations": [
+    {
+     "regulation": "PMLA 2002 and PML Rules",
+     "clause_id": "PMLA-STR",
+     "citation": "PMLA 2002 and PML Rules: Suspicious transaction reporting to FIU-IND",
+     "jurisdiction": "IN",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": true
+    },
+    {
+     "regulation": "FATF Recommendations",
+     "clause_id": "FATF-R20",
+     "citation": "FATF Recommendations: Reporting of suspicious transactions (R.20)",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": true
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-STR] Mandatory control with no covering requirement: Suspicious activity reporting.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "21efcea7-b174-4282-9480-4730fcd089f0",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-SEC-003",
+   "statement": "The system shall perform liveness detection and face matching against the identity document for remote onboarding and reject presentation attacks.",
+   "categories": [
+    "security",
+    "functional"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by ISO/IEC 30107-3, NIST SP 800-63A, RBI KYC Master Direction.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a remote onboarding attempt, When the user provides a selfie, Then the system shall perform liveness detection and reject presentation attacks."
+   ],
+   "regulations": [
+    {
+     "regulation": "ISO/IEC 30107-3",
+     "clause_id": "ISO-30107",
+     "citation": "ISO/IEC 30107-3: Biometric presentation attack detection",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "NIST SP 800-63A",
+     "clause_id": "NIST-800-63A",
+     "citation": "NIST SP 800-63A: Identity proofing assurance levels",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "RBI KYC Master Direction",
+     "clause_id": "RBI-KYC-VCIP",
+     "citation": "RBI KYC Master Direction: Video-based customer identification (V-CIP)",
+     "jurisdiction": "IN",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-LIVENESS] Mandatory control with no covering requirement: Biometric liveness and presentation-attack detection.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "6566f790-9cf9-4d25-808d-c387222dff92",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-SEC-004",
+   "statement": "The system shall validate uploaded identity documents for authenticity and tampering and route doubtful documents to manual review.",
+   "categories": [
+    "security",
+    "functional"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by NIST SP 800-63A, RBI KYC Master Direction.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given an uploaded identity document, When the system processes it, Then it shall validate authenticity and route suspicious documents to manual review."
+   ],
+   "regulations": [
+    {
+     "regulation": "NIST SP 800-63A",
+     "clause_id": "NIST-800-63A",
+     "citation": "NIST SP 800-63A: Identity proofing assurance levels",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "RBI KYC Master Direction",
+     "clause_id": "RBI-KYC-CIP",
+     "citation": "RBI KYC Master Direction: Customer identification and verification",
+     "jurisdiction": "IN",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-DOCFRAUD] Mandatory control with no covering requirement: Document authenticity and tamper detection.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "9fdc883d-76d0-4ada-a267-bd86381f58eb",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-SEC-005",
+   "statement": "The system shall restrict access to KYC records by role on a least-privilege basis and log every access to full identity documents.",
+   "categories": [
+    "security"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by ISO/IEC 27001:2022, Illustrative internal policy, OWASP ASVS 4.0.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a user accessing KYC records, When the user attempts to view full identity documents, Then the system shall verify role-based access and log the action."
+   ],
+   "regulations": [
+    {
+     "regulation": "ISO/IEC 27001:2022",
+     "clause_id": "ISO-27001",
+     "citation": "ISO/IEC 27001:2022: Information security management controls",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "OWASP ASVS 4.0",
+     "clause_id": "OWASP-ASVS",
+     "citation": "OWASP ASVS 4.0: Application security verification",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "Illustrative internal policy",
+     "clause_id": "ORG-POL-ACCESS",
+     "citation": "Illustrative internal policy: KYC data access policy (sample)",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-ACCESS] Mandatory control with no covering requirement: Role-based access to KYC data.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "7aaaf003-14f7-4771-9ab3-1cba696874e9",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-SEC-006",
+   "statement": "The system shall detect personal-data incidents and support notifying the regulator and affected customers within the legal deadline.",
+   "categories": [
+    "security",
+    "privacy",
+    "operational"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by DPDP Act 2023.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a personal-data incident, When detected, Then the system shall trigger the notification workflow for the regulator and affected customers."
+   ],
+   "regulations": [
+    {
+     "regulation": "DPDP Act 2023",
+     "clause_id": "DPDP-BREACH",
+     "citation": "DPDP Act 2023: Personal data breach notification",
+     "jurisdiction": "IN",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-BREACH] Mandatory control with no covering requirement: Breach detection and notification.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "a973e040-59aa-4396-9106-d48d4b476e73",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-PRV-003",
+   "statement": "The system shall let customers request access, correction or erasure of their data and shall record where retention law overrides erasure.",
+   "categories": [
+    "privacy",
+    "regulatory"
+   ],
+   "primary_category": "privacy",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by DPDP Act 2023.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a customer request for data erasure, When the request is processed, Then the system shall verify if retention laws override the request and record the outcome."
+   ],
+   "regulations": [
+    {
+     "regulation": "DPDP Act 2023",
+     "clause_id": "DPDP-RIGHTS",
+     "citation": "DPDP Act 2023: Rights of the data principal",
+     "jurisdiction": "IN",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 4.0,
+    "score": 8.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-RIGHTS] Mandatory control with no covering requirement: Data-subject rights handling.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "3868237d-1271-42f0-ae5e-a02d09f91d1a",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-SEC-007",
+   "statement": "The system shall encrypt all KYC documents and evidence at rest using industry-standard algorithms.",
+   "categories": [
+    "security"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (security/privacy analysis)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Storing identity documents and evidence requires protection against unauthorized access if the storage medium is compromised.",
+   "priority": "high",
+   "dependencies": [
+    "KYC-REG-007"
+   ],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given KYC documents and evidence, When stored, Then the system shall encrypt them using industry-standard algorithms."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.81,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "Storing identity documents and evidence requires protection against unauthorized access if the storage medium is compromised.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "54b1fbb9-c246-4ca4-ab78-ac807c1034f2",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-SEC-008",
+   "statement": "The system shall implement secure communication channels (TLS 1.2+) for all data transmissions between the mobile app, web portal, and backend.",
+   "categories": [
+    "security"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (security/privacy analysis)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Collecting sensitive identity data and self-declarations requires protection against interception during transit.",
+   "priority": "high",
+   "dependencies": [
+    "KYC-UX-003"
+   ],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given data transmission between app/web and backend, When data is sent, Then the system shall use TLS 1.2+."
+   ],
+   "regulations": [
+    {
+     "regulation": "DPDP Act 2023",
+     "clause_id": "DPDP-SAFEGUARDS",
+     "citation": "DPDP Act 2023: Reasonable security safeguards",
+     "jurisdiction": "IN",
+     "confidence": 0.8,
+     "rationale": "The DPDP Act mandates reasonable security safeguards, including encryption, to protect personal data during processing and transmission.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "OWASP ASVS 4.0",
+     "clause_id": "OWASP-ASVS",
+     "citation": "OWASP ASVS 4.0: Application security verification",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.7,
+     "rationale": "OWASP ASVS provides specific verification requirements for secure communication and API security to protect sensitive data.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.89,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "Collecting sensitive identity data and self-declarations requires protection against interception during transit.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "42a87f60-f0bc-4bb9-8c69-962146a04d40",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-SEC-009",
+   "statement": "The system shall maintain an immutable audit log of all manual approvals for account freezes.",
+   "categories": [
+    "security"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (security/privacy analysis)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Ensuring accountability for high-impact operational decisions requires non-repudiable logging of the approval process.",
+   "priority": "high",
+   "dependencies": [
+    "KYC-SEC-001"
+   ],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a manual approval for an account freeze, When the approval is recorded, Then the system shall ensure the log is immutable."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 4.0,
+    "score": 8.0
+   },
+   "confidence_score": 0.81,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "Ensuring accountability for high-impact operational decisions requires non-repudiable logging of the approval process.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "0b1d2635-6d2d-453b-a302-ca26d62eb236",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-SEC-010",
+   "statement": "The system shall automatically purge or anonymize KYC records once the 5-year retention period post-relationship has expired.",
+   "categories": [
+    "security",
+    "privacy"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (security/privacy analysis)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Compliance with privacy regulations requires that data is not held indefinitely beyond the legal retention requirement.",
+   "priority": "high",
+   "dependencies": [
+    "KYC-REG-007"
+   ],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a record that has exceeded the 5-year post-relationship retention period, When the purge job runs, Then the system shall automatically purge or anonymize the record."
+   ],
+   "regulations": [
+    {
+     "regulation": "DPDP Act 2023",
+     "clause_id": "DPDP-MINIMISE",
+     "citation": "DPDP Act 2023: Purpose limitation, minimisation and erasure",
+     "jurisdiction": "IN",
+     "confidence": 0.9,
+     "rationale": "The DPDP Act requires the erasure of personal data once the purpose is served, unless retention is legally mandated.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "RBI KYC Master Direction",
+     "clause_id": "RBI-KYC-RETAIN",
+     "citation": "RBI KYC Master Direction: Record retention",
+     "jurisdiction": "IN",
+     "confidence": 0.8,
+     "rationale": "The RBI Master Direction mandates the preservation of records for at least five years, implying a requirement to manage the lifecycle of these records.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 4.0,
+    "score": 8.0
+   },
+   "confidence_score": 0.92,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "Compliance with privacy regulations requires that data is not held indefinitely beyond the legal retention requirement.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "92f2a4a7-f1bf-410e-a688-716dbfa1f9fe",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-SEC-011",
+   "statement": "The system shall implement multi-factor authentication for all staff accessing the KYC management interface.",
+   "categories": [
+    "security"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (security/privacy analysis)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Restricting access by role is insufficient if credentials can be compromised; MFA is required to protect sensitive KYC data.",
+   "priority": "high",
+   "dependencies": [
+    "KYC-SEC-005"
+   ],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a staff member accessing the KYC interface, When they attempt to log in, Then the system shall enforce multi-factor authentication."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.81,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "Restricting access by role is insufficient if credentials can be compromised; MFA is required to protect sensitive KYC data.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "7ae0109e-f51a-45b7-9e3a-a60734be6c89",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-SEC-012",
+   "statement": "The system shall perform integrity checks on all uploaded proof-of-address documents to detect digital tampering.",
+   "categories": [
+    "security"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (security/privacy analysis)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Verification of address changes requires assurance that the submitted evidence has not been altered.",
+   "priority": "high",
+   "dependencies": [
+    "KYC-REG-004"
+   ],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given an uploaded proof-of-address document, When the system processes it, Then it shall perform integrity checks to detect digital tampering."
+   ],
+   "regulations": [
+    {
+     "regulation": "NIST SP 800-63A",
+     "clause_id": "NIST-800-63A",
+     "citation": "NIST SP 800-63A: Identity proofing assurance levels",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.8,
+     "rationale": "NIST 800-63A explicitly requires the detection of forged or tampered documents as part of identity proofing assurance.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 4.0,
+    "score": 8.0
+   },
+   "confidence_score": 0.9,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "Verification of address changes requires assurance that the submitted evidence has not been altered.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "98c81090-b0a1-49d8-bf33-81ed6da28d97",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-SEC-013",
+   "statement": "The system shall provide a secure, authenticated session for the self-declaration feature to prevent unauthorized submission of data.",
+   "categories": [
+    "security"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (security/privacy analysis)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Ensuring the integrity of self-declarations requires that the submission is tied to a verified customer session.",
+   "priority": "high",
+   "dependencies": [
+    "KYC-UX-003"
+   ],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a self-declaration submission, When the user submits data, Then the system shall verify the session is authenticated."
+   ],
+   "regulations": [
+    {
+     "regulation": "OWASP ASVS 4.0",
+     "clause_id": "OWASP-ASVS",
+     "citation": "OWASP ASVS 4.0: Application security verification",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.8,
+     "rationale": "OWASP ASVS mandates secure session management and authentication controls to prevent unauthorized access to application features.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "DPDP Act 2023",
+     "clause_id": "DPDP-SAFEGUARDS",
+     "citation": "DPDP Act 2023: Reasonable security safeguards",
+     "jurisdiction": "IN",
+     "confidence": 0.7,
+     "rationale": "The DPDP Act requires reasonable security safeguards, such as access controls, to protect personal data from unauthorized access.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "low",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 3.0,
+    "score": 6.0
+   },
+   "confidence_score": 0.89,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "Ensuring the integrity of self-declarations requires that the submission is tied to a verified customer session.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "f410bc9e-6aa4-4113-bc8d-789e781a262b",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "ref": "KYC-SEC-014",
+   "statement": "The system shall implement rate limiting on the self-declaration and document upload endpoints to prevent automated abuse.",
+   "categories": [
+    "security"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (security/privacy analysis)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Public-facing submission features are susceptible to automated attacks that could overwhelm the system or facilitate fraud.",
+   "priority": "high",
+   "dependencies": [
+    "KYC-UX-004"
+   ],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given the self-declaration or document upload endpoints, When a user exceeds [TBD: number] requests per [TBD: time period], Then the system shall rate-limit the requests."
+   ],
+   "regulations": [
+    {
+     "regulation": "DPDP Act 2023",
+     "clause_id": "DPDP-SAFEGUARDS",
+     "citation": "DPDP Act 2023: Reasonable security safeguards",
+     "jurisdiction": "IN",
+     "confidence": 0.6,
+     "rationale": "Rate limiting is a reasonable security safeguard to prevent automated abuse and protect the integrity of personal data systems.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "low",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 3.0,
+    "score": 6.0
+   },
+   "confidence_score": 0.84,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "Public-facing submission features are susceptible to automated attacks that could overwhelm the system or facilitate fraud.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  }
+ ],
+ "questions": [
+  {
+   "id": "e9d67422-d8bf-4502-be66-1f2756cde99a",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "requirement_id": "310c7216-3cf9-4c7f-ab9e-12f58b2421e1",
+   "question": "What specific verification methods (e.g., OCR, manual review, third-party API) are required for address proof?",
+   "why": "Defines the technical implementation requirement.",
+   "options": [
+    "Manual review",
+    "Automated OCR",
+    "Third-party API validation"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:00:32+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "3995fe7b-76cd-4a84-b217-c4489eef48c3",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "requirement_id": "e7ad9f8c-ff7b-4a21-ad27-79d6f36f2bd9",
+   "question": "Should the 10-day deadline be calculated in calendar days or business days?",
+   "why": "Clarifies the deadline calculation for compliance.",
+   "options": [
+    "Calendar days",
+    "Business days"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:00:32+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "52dbf32a-3d96-47b5-8c85-eb87bcac039e",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "requirement_id": "a88bc308-871a-4961-a439-b567a1cc3653",
+   "question": "How is 'authorised compliance staff' defined in terms of system roles or access groups?",
+   "why": "Ensures proper access control implementation.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:00:32+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "4f544f1a-f099-47d0-a2bb-ad609ede50d8",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "requirement_id": "14f8efc6-d759-4ffa-a94f-665c3f5dd8e5",
+   "question": "What is the specific formula or logic to calculate the next due date based on the risk category?",
+   "why": "Required for system logic implementation.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:00:32+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "a2563fc2-7174-47e7-8429-555c7ed28c81",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "requirement_id": "7b126abf-8575-44d3-97ce-74ad9b13a5ac",
+   "question": "Which communication channels must be used for these reminders?",
+   "why": "Defines the required notification integrations.",
+   "options": [
+    "Email",
+    "SMS",
+    "Push Notification",
+    "All of the above"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:00:32+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "8f79336f-5726-46a6-b66a-14e9ad906c4c",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "requirement_id": "8fba3424-a196-412e-a7b5-db66c3b4d23f",
+   "question": "What specific data fields or legal disclaimers must be included in the self-declaration?",
+   "why": "Required for UI/UX design and legal compliance.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:00:32+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "d577681d-79a4-4b4d-a593-770657206281",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "requirement_id": "c98adebc-1411-4640-baf7-40cd16e04ceb",
+   "question": "What are the accepted file formats and maximum file size limits for address proof uploads?",
+   "why": "Necessary for system storage and validation logic.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:00:32+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "956b43bf-af6f-46c4-a2a9-a517eb17169f",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "requirement_id": "2fa103e1-94aa-491b-97ff-1248205031b5",
+   "question": "What is the expected workflow for an operations officer to verify an address change?",
+   "why": "Required to design the verification interface.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:00:32+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "bfc961a4-ddeb-442c-89c6-c406973228d8",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "requirement_id": "4f428200-be08-477f-b722-5bc713e77695",
+   "question": "Does the 10-day submission window refer to calendar days or business days?",
+   "why": "Clarifies the regulatory deadline.",
+   "options": [
+    "Calendar days",
+    "Business days"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:00:32+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "f1009a13-d649-442e-bc86-3d3a651e6cae",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "requirement_id": "9108d481-3fed-47fe-b237-179491456801",
+   "question": "Which specific data fields (e.g., Employee ID, Timestamp, Digital Signature) must be captured for the branch manager?",
+   "why": "Required for audit trail implementation.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:00:32+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "4f862815-eedb-4f5a-8bd2-9899524c511e",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "requirement_id": "9605603b-3d6d-469a-9d9f-7fe53fabd678",
+   "question": "In what format should the monthly compliance report be generated?",
+   "why": "Determines the output requirements for the reporting module.",
+   "options": [
+    "PDF",
+    "CSV",
+    "Dashboard view"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:00:32+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "0f0bb89a-0c6a-4510-9484-c7fea0f9ea8a",
+   "project_id": "3d7e113c-4cf9-4c05-b726-d888f35c356e",
+   "requirement_id": "24dcc8c8-d0e6-4b41-adb4-11a66dc55afb",
+   "question": "What are the technical specifications or documentation for the 'approved integration layer'?",
+   "why": "Required for system architecture and integration.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:00:32+00:00",
+   "answered_at": null
+  }
+ ],
+ "analysis": {
+  "analysed_docs": [
+   "0da88884-6184-42c4-bd39-7ddb133994b6",
+   "9f3a028b-79ab-40ea-8f03-d91e169200af"
+  ],
+  "guard": {
+   "ungrounded_requirements": 0,
+   "invalid_citations": 1,
+   "pii_masked": 0,
+   "injection_quarantined": 0
+  },
+  "done": {
+   "classified": [
+    "0b1d2635-6d2d-453b-a302-ca26d62eb236",
+    "1370b93f-29e0-404a-b2f8-b18f55d7f348",
+    "14f8efc6-d759-4ffa-a94f-665c3f5dd8e5",
+    "15df064b-6d67-45d5-b87c-06410e34b429",
+    "1ba93533-3bbb-41ca-8da3-be9f5ec59664",
+    "21efcea7-b174-4282-9480-4730fcd089f0",
+    "235f2dfb-c432-4c4f-98b2-5551b59bf16d",
+    "24dcc8c8-d0e6-4b41-adb4-11a66dc55afb",
+    "2fa103e1-94aa-491b-97ff-1248205031b5",
+    "310c7216-3cf9-4c7f-ab9e-12f58b2421e1",
+    "3868237d-1271-42f0-ae5e-a02d09f91d1a",
+    "42a87f60-f0bc-4bb9-8c69-962146a04d40",
+    "4f428200-be08-477f-b722-5bc713e77695",
+    "4fcdd662-484c-4984-9dc3-f6785d8f9b93",
+    "54b1fbb9-c246-4ca4-ab78-ac807c1034f2",
+    "60a93a48-0f51-4ad5-b49a-45e4492f8825",
+    "6566f790-9cf9-4d25-808d-c387222dff92",
+    "65d47b27-e9d4-4391-b9e1-b0792ad311f5",
+    "66420eeb-7087-41a3-9391-b598d876b6ad",
+    "6b552537-c8cd-4b68-8691-de07d9cb011b",
+    "7aaaf003-14f7-4771-9ab3-1cba696874e9",
+    "7ae0109e-f51a-45b7-9e3a-a60734be6c89",
+    "7b126abf-8575-44d3-97ce-74ad9b13a5ac",
+    "8fba3424-a196-412e-a7b5-db66c3b4d23f",
+    "9108d481-3fed-47fe-b237-179491456801",
+    "92f2a4a7-f1bf-410e-a688-716dbfa1f9fe",
+    "9605603b-3d6d-469a-9d9f-7fe53fabd678",
+    "9611e821-90d9-4b28-9f6c-6a7d98856577",
+    "98c81090-b0a1-49d8-bf33-81ed6da28d97",
+    "9fdc883d-76d0-4ada-a267-bd86381f58eb",
+    "a34fee90-a453-45e8-8627-abefc6bfb302",
+    "a88bc308-871a-4961-a439-b567a1cc3653",
+    "a973e040-59aa-4396-9106-d48d4b476e73",
+    "a9fa9a1e-1e9e-47d2-84a7-28e15ec0b0ae",
+    "add21532-d623-47e2-b393-a4ac435e0b87",
+    "b1f2b785-4003-4957-941e-de36d8ddeb7a",
+    "c98adebc-1411-4640-baf7-40cd16e04ceb",
+    "e05616d9-8e86-4298-8ef5-db65f69d5ccd",
+    "e4581f1c-c68c-4e52-9f5b-e05fbbbd669f",
+    "e7ad9f8c-ff7b-4a21-ad27-79d6f36f2bd9",
+    "f410bc9e-6aa4-4113-bc8d-789e781a262b",
+    "f5bf2ff6-7fab-44df-ab07-0e373ad0990d"
+   ],
+   "reviewed": [
+    "0b1d2635-6d2d-453b-a302-ca26d62eb236",
+    "1370b93f-29e0-404a-b2f8-b18f55d7f348",
+    "14f8efc6-d759-4ffa-a94f-665c3f5dd8e5",
+    "15df064b-6d67-45d5-b87c-06410e34b429",
+    "1ba93533-3bbb-41ca-8da3-be9f5ec59664",
+    "21efcea7-b174-4282-9480-4730fcd089f0",
+    "235f2dfb-c432-4c4f-98b2-5551b59bf16d",
+    "24dcc8c8-d0e6-4b41-adb4-11a66dc55afb",
+    "2fa103e1-94aa-491b-97ff-1248205031b5",
+    "310c7216-3cf9-4c7f-ab9e-12f58b2421e1",
+    "3868237d-1271-42f0-ae5e-a02d09f91d1a",
+    "42a87f60-f0bc-4bb9-8c69-962146a04d40",
+    "4f428200-be08-477f-b722-5bc713e77695",
+    "4fcdd662-484c-4984-9dc3-f6785d8f9b93",
+    "54b1fbb9-c246-4ca4-ab78-ac807c1034f2",
+    "60a93a48-0f51-4ad5-b49a-45e4492f8825",
+    "6566f790-9cf9-4d25-808d-c387222dff92",
+    "65d47b27-e9d4-4391-b9e1-b0792ad311f5",
+    "66420eeb-7087-41a3-9391-b598d876b6ad",
+    "6b552537-c8cd-4b68-8691-de07d9cb011b",
+    "7aaaf003-14f7-4771-9ab3-1cba696874e9",
+    "7ae0109e-f51a-45b7-9e3a-a60734be6c89",
+    "7b126abf-8575-44d3-97ce-74ad9b13a5ac",
+    "8fba3424-a196-412e-a7b5-db66c3b4d23f",
+    "9108d481-3fed-47fe-b237-179491456801",
+    "92f2a4a7-f1bf-410e-a688-716dbfa1f9fe",
+    "9605603b-3d6d-469a-9d9f-7fe53fabd678",
+    "9611e821-90d9-4b28-9f6c-6a7d98856577",
+    "98c81090-b0a1-49d8-bf33-81ed6da28d97",
+    "9fdc883d-76d0-4ada-a267-bd86381f58eb",
+    "a34fee90-a453-45e8-8627-abefc6bfb302",
+    "a88bc308-871a-4961-a439-b567a1cc3653",
+    "a973e040-59aa-4396-9106-d48d4b476e73",
+    "a9fa9a1e-1e9e-47d2-84a7-28e15ec0b0ae",
+    "add21532-d623-47e2-b393-a4ac435e0b87",
+    "b1f2b785-4003-4957-941e-de36d8ddeb7a",
+    "c98adebc-1411-4640-baf7-40cd16e04ceb",
+    "e05616d9-8e86-4298-8ef5-db65f69d5ccd",
+    "e4581f1c-c68c-4e52-9f5b-e05fbbbd669f",
+    "e7ad9f8c-ff7b-4a21-ad27-79d6f36f2bd9",
+    "f410bc9e-6aa4-4113-bc8d-789e781a262b",
+    "f5bf2ff6-7fab-44df-ab07-0e373ad0990d"
+   ],
+   "mapped": [
+    "0b1d2635-6d2d-453b-a302-ca26d62eb236",
+    "1370b93f-29e0-404a-b2f8-b18f55d7f348",
+    "14f8efc6-d759-4ffa-a94f-665c3f5dd8e5",
+    "15df064b-6d67-45d5-b87c-06410e34b429",
+    "1ba93533-3bbb-41ca-8da3-be9f5ec59664",
+    "21efcea7-b174-4282-9480-4730fcd089f0",
+    "235f2dfb-c432-4c4f-98b2-5551b59bf16d",
+    "24dcc8c8-d0e6-4b41-adb4-11a66dc55afb",
+    "2fa103e1-94aa-491b-97ff-1248205031b5",
+    "310c7216-3cf9-4c7f-ab9e-12f58b2421e1",
+    "3868237d-1271-42f0-ae5e-a02d09f91d1a",
+    "42a87f60-f0bc-4bb9-8c69-962146a04d40",
+    "4f428200-be08-477f-b722-5bc713e77695",
+    "4fcdd662-484c-4984-9dc3-f6785d8f9b93",
+    "54b1fbb9-c246-4ca4-ab78-ac807c1034f2",
+    "60a93a48-0f51-4ad5-b49a-45e4492f8825",
+    "6566f790-9cf9-4d25-808d-c387222dff92",
+    "65d47b27-e9d4-4391-b9e1-b0792ad311f5",
+    "66420eeb-7087-41a3-9391-b598d876b6ad",
+    "6b552537-c8cd-4b68-8691-de07d9cb011b",
+    "7aaaf003-14f7-4771-9ab3-1cba696874e9",
+    "7ae0109e-f51a-45b7-9e3a-a60734be6c89",
+    "7b126abf-8575-44d3-97ce-74ad9b13a5ac",
+    "8fba3424-a196-412e-a7b5-db66c3b4d23f",
+    "9108d481-3fed-47fe-b237-179491456801",
+    "92f2a4a7-f1bf-410e-a688-716dbfa1f9fe",
+    "9605603b-3d6d-469a-9d9f-7fe53fabd678",
+    "9611e821-90d9-4b28-9f6c-6a7d98856577",
+    "98c81090-b0a1-49d8-bf33-81ed6da28d97",
+    "9fdc883d-76d0-4ada-a267-bd86381f58eb",
+    "a34fee90-a453-45e8-8627-abefc6bfb302",
+    "a88bc308-871a-4961-a439-b567a1cc3653",
+    "a973e040-59aa-4396-9106-d48d4b476e73",
+    "a9fa9a1e-1e9e-47d2-84a7-28e15ec0b0ae",
+    "add21532-d623-47e2-b393-a4ac435e0b87",
+    "b1f2b785-4003-4957-941e-de36d8ddeb7a",
+    "c98adebc-1411-4640-baf7-40cd16e04ceb",
+    "e05616d9-8e86-4298-8ef5-db65f69d5ccd",
+    "e4581f1c-c68c-4e52-9f5b-e05fbbbd669f",
+    "e7ad9f8c-ff7b-4a21-ad27-79d6f36f2bd9",
+    "f410bc9e-6aa4-4113-bc8d-789e781a262b",
+    "f5bf2ff6-7fab-44df-ab07-0e373ad0990d"
+   ],
+   "criteria": [
+    "0b1d2635-6d2d-453b-a302-ca26d62eb236",
+    "1370b93f-29e0-404a-b2f8-b18f55d7f348",
+    "14f8efc6-d759-4ffa-a94f-665c3f5dd8e5",
+    "15df064b-6d67-45d5-b87c-06410e34b429",
+    "1ba93533-3bbb-41ca-8da3-be9f5ec59664",
+    "21efcea7-b174-4282-9480-4730fcd089f0",
+    "235f2dfb-c432-4c4f-98b2-5551b59bf16d",
+    "24dcc8c8-d0e6-4b41-adb4-11a66dc55afb",
+    "2fa103e1-94aa-491b-97ff-1248205031b5",
+    "310c7216-3cf9-4c7f-ab9e-12f58b2421e1",
+    "3868237d-1271-42f0-ae5e-a02d09f91d1a",
+    "42a87f60-f0bc-4bb9-8c69-962146a04d40",
+    "4f428200-be08-477f-b722-5bc713e77695",
+    "4fcdd662-484c-4984-9dc3-f6785d8f9b93",
+    "54b1fbb9-c246-4ca4-ab78-ac807c1034f2",
+    "60a93a48-0f51-4ad5-b49a-45e4492f8825",
+    "6566f790-9cf9-4d25-808d-c387222dff92",
+    "65d47b27-e9d4-4391-b9e1-b0792ad311f5",
+    "66420eeb-7087-41a3-9391-b598d876b6ad",
+    "6b552537-c8cd-4b68-8691-de07d9cb011b",
+    "7aaaf003-14f7-4771-9ab3-1cba696874e9",
+    "7ae0109e-f51a-45b7-9e3a-a60734be6c89",
+    "7b126abf-8575-44d3-97ce-74ad9b13a5ac",
+    "8fba3424-a196-412e-a7b5-db66c3b4d23f",
+    "9108d481-3fed-47fe-b237-179491456801",
+    "92f2a4a7-f1bf-410e-a688-716dbfa1f9fe",
+    "9605603b-3d6d-469a-9d9f-7fe53fabd678",
+    "9611e821-90d9-4b28-9f6c-6a7d98856577",
+    "98c81090-b0a1-49d8-bf33-81ed6da28d97",
+    "9fdc883d-76d0-4ada-a267-bd86381f58eb",
+    "a34fee90-a453-45e8-8627-abefc6bfb302",
+    "a88bc308-871a-4961-a439-b567a1cc3653",
+    "a973e040-59aa-4396-9106-d48d4b476e73",
+    "a9fa9a1e-1e9e-47d2-84a7-28e15ec0b0ae",
+    "add21532-d623-47e2-b393-a4ac435e0b87",
+    "b1f2b785-4003-4957-941e-de36d8ddeb7a",
+    "c98adebc-1411-4640-baf7-40cd16e04ceb",
+    "e05616d9-8e86-4298-8ef5-db65f69d5ccd",
+    "e4581f1c-c68c-4e52-9f5b-e05fbbbd669f",
+    "e7ad9f8c-ff7b-4a21-ad27-79d6f36f2bd9",
+    "f410bc9e-6aa4-4113-bc8d-789e781a262b",
+    "f5bf2ff6-7fab-44df-ab07-0e373ad0990d"
+   ],
+   "risked": [
+    "0b1d2635-6d2d-453b-a302-ca26d62eb236",
+    "1370b93f-29e0-404a-b2f8-b18f55d7f348",
+    "14f8efc6-d759-4ffa-a94f-665c3f5dd8e5",
+    "15df064b-6d67-45d5-b87c-06410e34b429",
+    "1ba93533-3bbb-41ca-8da3-be9f5ec59664",
+    "21efcea7-b174-4282-9480-4730fcd089f0",
+    "235f2dfb-c432-4c4f-98b2-5551b59bf16d",
+    "24dcc8c8-d0e6-4b41-adb4-11a66dc55afb",
+    "2fa103e1-94aa-491b-97ff-1248205031b5",
+    "310c7216-3cf9-4c7f-ab9e-12f58b2421e1",
+    "3868237d-1271-42f0-ae5e-a02d09f91d1a",
+    "42a87f60-f0bc-4bb9-8c69-962146a04d40",
+    "4f428200-be08-477f-b722-5bc713e77695",
+    "4fcdd662-484c-4984-9dc3-f6785d8f9b93",
+    "54b1fbb9-c246-4ca4-ab78-ac807c1034f2",
+    "60a93a48-0f51-4ad5-b49a-45e4492f8825",
+    "6566f790-9cf9-4d25-808d-c387222dff92",
+    "65d47b27-e9d4-4391-b9e1-b0792ad311f5",
+    "66420eeb-7087-41a3-9391-b598d876b6ad",
+    "6b552537-c8cd-4b68-8691-de07d9cb011b",
+    "7aaaf003-14f7-4771-9ab3-1cba696874e9",
+    "7ae0109e-f51a-45b7-9e3a-a60734be6c89",
+    "7b126abf-8575-44d3-97ce-74ad9b13a5ac",
+    "8fba3424-a196-412e-a7b5-db66c3b4d23f",
+    "9108d481-3fed-47fe-b237-179491456801",
+    "92f2a4a7-f1bf-410e-a688-716dbfa1f9fe",
+    "9605603b-3d6d-469a-9d9f-7fe53fabd678",
+    "9611e821-90d9-4b28-9f6c-6a7d98856577",
+    "98c81090-b0a1-49d8-bf33-81ed6da28d97",
+    "9fdc883d-76d0-4ada-a267-bd86381f58eb",
+    "a34fee90-a453-45e8-8627-abefc6bfb302",
+    "a88bc308-871a-4961-a439-b567a1cc3653",
+    "a973e040-59aa-4396-9106-d48d4b476e73",
+    "a9fa9a1e-1e9e-47d2-84a7-28e15ec0b0ae",
+    "add21532-d623-47e2-b393-a4ac435e0b87",
+    "b1f2b785-4003-4957-941e-de36d8ddeb7a",
+    "c98adebc-1411-4640-baf7-40cd16e04ceb",
+    "e05616d9-8e86-4298-8ef5-db65f69d5ccd",
+    "e4581f1c-c68c-4e52-9f5b-e05fbbbd669f",
+    "e7ad9f8c-ff7b-4a21-ad27-79d6f36f2bd9",
+    "f410bc9e-6aa4-4113-bc8d-789e781a262b",
+    "f5bf2ff6-7fab-44df-ab07-0e373ad0990d"
+   ]
+  },
+  "controls": [
+   {
+    "control_id": "C-CIP",
+    "title": "Customer identification and verification",
+    "description": "Regulated entities must identify every customer before establishing an account-based relationship and verify identity using an Officially Valid Document (passport, driving licence, voter ID, proof of Aadhaar possession, NREGA card) or its equivalent e-document, together with PAN or Form 60. Customers must not be allowed to open anonymous or fictitious-name accounts.",
+    "regulations": [
+     "EU AML Directive (2015/849 as amended)",
+     "FATF Recommendations",
+     "FinCEN Customer Identification Program (31 CFR 1020.220)",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-FR-005",
+     "KYC-FR-006",
+     "KYC-PERF-001",
+     "KYC-PRV-001",
+     "KYC-PRV-002",
+     "KYC-REG-004",
+     "KYC-SEC-002",
+     "KYC-SEC-003",
+     "KYC-SEC-004",
+     "KYC-SEC-005"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-RISK",
+    "title": "Risk-based customer categorisation",
+    "description": "Each customer must be categorised as low, medium or high risk using documented parameters such as customer type, geography, product, delivery channel and transaction pattern. The intensity of due diligence and monitoring must match the assigned risk category, and the categorisation must be reviewable.",
+    "regulations": [
+     "FATF Recommendations",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-FR-001",
+     "KYC-FR-007",
+     "KYC-REG-001"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-SANCTIONS",
+    "title": "Sanctions and watchlist screening",
+    "description": "Customers and related parties must be screened against applicable sanctions lists, and assets of designated persons must be frozen without delay and reported to the authorities.",
+    "regulations": [
+     "EU AML Directive (2015/849 as amended)",
+     "FATF Recommendations",
+     "OFAC sanctions regulations"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-FR-004"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-PEP",
+    "title": "PEP identification and senior approval",
+    "description": "Institutions need risk-management systems to determine whether a customer or beneficial owner is a politically exposed person and, for foreign PEPs and higher-risk domestic PEPs, must obtain senior management approval, establish source of wealth and funds, and conduct enhanced ongoing monitoring.",
+    "regulations": [
+     "FATF Recommendations",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-FR-005",
+     "KYC-FR-007"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-UBO",
+    "title": "Beneficial ownership of legal entities",
+    "description": "For companies, partnerships, trusts and other legal entities, the natural persons who ultimately own or control the entity must be identified and verified. A controlling ownership interest is defined by a percentage threshold set in the direction (verify the current figure); where no owner meets the threshold the person exercising control, or the senior managing official, is identified.",
+    "regulations": [
+     "EU AML Directive (2015/849 as amended)",
+     "FATF Recommendations",
+     "FinCEN CDD Rule (31 CFR 1010.230)",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-FR-006"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-EDD",
+    "title": "Enhanced due diligence for high-risk customers",
+    "description": "High-risk customers, politically exposed persons and non-face-to-face customers require enhanced due diligence: additional identity evidence, source of funds or wealth where relevant, senior management approval before establishing or continuing a relationship with a PEP, and closer ongoing monitoring.",
+    "regulations": [
+     "EU AML Directive (2015/849 as amended)",
+     "FATF Recommendations",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-FR-005",
+     "KYC-FR-007"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-CONSENT",
+    "title": "Notice and consent for personal data",
+    "description": "Personal data may be processed only for a lawful purpose, with free, specific, informed and unambiguous consent after a clear notice, or under a defined legitimate use such as compliance with a legal obligation. Consent must be as easy to withdraw as to give, and the data fiduciary must be able to show it was obtained.",
+    "regulations": [
+     "Aadhaar Act 2016 and UIDAI circulars",
+     "DPDP Act 2023",
+     "GDPR",
+     "GLBA Safeguards and Privacy Rules"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-PRV-002"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-MINIMISE",
+    "title": "Data minimisation and purpose limitation",
+    "description": "Only the personal data necessary for the stated purpose may be collected, and it must be erased once the purpose is served unless a law requires retention. KYC records retained under anti-money-laundering law are a legal-retention case.",
+    "regulations": [
+     "DPDP Act 2023",
+     "GDPR"
+    ],
+    "status": "partial",
+    "covered_by": [
+     "KYC-INT-001"
+    ],
+    "suggested_requirement": "The system shall collect only the identity data necessary for KYC and shall not reuse it for other purposes without separate consent."
+   },
+   {
+    "control_id": "C-RETENTION",
+    "title": "Record retention for at least five years",
+    "description": "Identification records and transaction records must be preserved for at least five years after the business relationship ends or the transaction takes place, in a form that can be produced promptly for competent authorities.",
+    "regulations": [
+     "Bank Secrecy Act recordkeeping",
+     "FATF Recommendations",
+     "Illustrative internal policy",
+     "PMLA 2002 and PML Rules",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-PRV-003",
+     "KYC-REG-007"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-REKYC",
+    "title": "Periodic KYC refresh (re-KYC)",
+    "description": "KYC information must be periodically updated: at least every two years for high-risk customers, every eight years for medium-risk and every ten years for low-risk customers. Customers must be able to submit self-declarations of unchanged details, and accounts must not be closed without notice for missing updates.",
+    "regulations": [
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-AUD-001",
+     "KYC-AUD-003",
+     "KYC-REG-001",
+     "KYC-REG-002",
+     "KYC-REG-003",
+     "KYC-REG-006",
+     "KYC-REG-007",
+     "KYC-REG-008"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-MONITOR",
+    "title": "Ongoing transaction monitoring",
+    "description": "Transactions must be monitored on an ongoing basis against the customer's profile and risk category, with alert rules calibrated to risk, documented alert handling, and prescribed threshold reports such as large cash transactions.",
+    "regulations": [
+     "FATF Recommendations",
+     "FinCEN CDD Rule (31 CFR 1010.230)",
+     "RBI KYC Master Direction"
+    ],
+    "status": "partial",
+    "covered_by": [
+     "KYC-AUD-002",
+     "KYC-AUD-003"
+    ],
+    "suggested_requirement": "The system shall monitor customer transactions against their risk profile and raise documented alerts for unusual activity."
+   },
+   {
+    "control_id": "C-STR",
+    "title": "Suspicious activity reporting",
+    "description": "Reporting entities must report suspicious transactions to the Financial Intelligence Unit - India promptly after concluding that a transaction is suspicious (the Rules set a short working-day deadline, verify the current figure), must not tip off the customer, and must keep the reasoning for decisions not to report.",
+    "regulations": [
+     "Bank Secrecy Act SAR rules",
+     "FATF Recommendations",
+     "PMLA 2002 and PML Rules"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-FR-008"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-LIVENESS",
+    "title": "Biometric liveness and presentation-attack detection",
+    "description": "Biometric capture used for identity verification should include presentation attack detection (liveness) that is tested against spoofing with photos, replayed video, masks and deepfakes, and report attack-detection error rates.",
+    "regulations": [
+     "ISO/IEC 30107-3",
+     "NIST SP 800-63A",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-SEC-003",
+     "KYC-SEC-004"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-DOCFRAUD",
+    "title": "Document authenticity and tamper detection",
+    "description": "Identity assurance level 2 requires evidence of identity to be validated as genuine and the applicant to be verified as its owner, in person or remotely, using biometric comparison or equivalent, with detection of forged or tampered documents and presentation attacks.",
+    "regulations": [
+     "NIST SP 800-63A",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-SEC-003",
+     "KYC-SEC-004"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-CKYC",
+    "title": "Central KYC registry integration",
+    "description": "Regulated entities must upload customer KYC records to the Central KYC Records Registry (CKYCR) within the prescribed period after onboarding, generate or use the KYC identifier, and fetch existing records from the registry before asking the customer to resubmit documents.",
+    "regulations": [
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-REG-005",
+     "KYC-REG-008"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-AUDIT",
+    "title": "Tamper-evident audit trail of KYC decisions",
+    "description": "Identification records and transaction records must be preserved for at least five years after the business relationship ends or the transaction takes place, in a form that can be produced promptly for competent authorities.",
+    "regulations": [
+     "GDPR",
+     "ISO/IEC 27001:2022",
+     "OWASP ASVS 4.0",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-AUD-001",
+     "KYC-REG-007",
+     "KYC-SEC-005"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-ENCRYPT",
+    "title": "Encryption and masking of KYC data",
+    "description": "The data fiduciary must protect personal data in its possession or under its control, including data processed by processors, by taking reasonable security safeguards such as encryption, obfuscation or masking, access controls and logging, to prevent a personal data breach.",
+    "regulations": [
+     "Aadhaar Act 2016 and UIDAI circulars",
+     "DPDP Act 2023",
+     "GDPR",
+     "GLBA Safeguards and Privacy Rules",
+     "ISO/IEC 27001:2022"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-PRV-001",
+     "KYC-PRV-002",
+     "KYC-SEC-002",
+     "KYC-SEC-005"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-ACCESS",
+    "title": "Role-based access to KYC data",
+    "description": "An information security management system should apply controls for access management and least privilege, cryptography, logging and monitoring, secure development, supplier relationships and incident management.",
+    "regulations": [
+     "GDPR",
+     "ISO/IEC 27001:2022",
+     "Illustrative internal policy",
+     "OWASP ASVS 4.0"
+    ],
+    "status": "partial",
+    "covered_by": [
+     "KYC-SEC-005"
+    ],
+    "suggested_requirement": "The system shall restrict access to KYC records by role on a least-privilege basis and log every access to full identity documents."
+   },
+   {
+    "control_id": "C-BREACH",
+    "title": "Breach detection and notification",
+    "description": "On a personal data breach the data fiduciary must notify the Data Protection Board and each affected data principal in the prescribed form and manner.",
+    "regulations": [
+     "DPDP Act 2023",
+     "GDPR"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-SEC-006"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-RIGHTS",
+    "title": "Data-subject rights handling",
+    "description": "Data principals have the right to access a summary of their data and processing, to correct and complete it, to request erasure (subject to legal retention), to grievance redress, and to nominate another person to exercise rights.",
+    "regulations": [
+     "DPDP Act 2023",
+     "GDPR"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-PRV-003"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-HUMAN-REVIEW",
+    "title": "Manual review and appeal of automated decisions",
+    "description": "People have the right not to be subject to solely automated decisions with legal or similarly significant effects, such as automatically rejecting an account application. Where such decisions are permitted, safeguards include the right to human intervention, to express a view and to contest the decision.",
+    "regulations": [
+     "GDPR",
+     "Illustrative internal policy",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-FR-001",
+     "KYC-PRV-003",
+     "KYC-SEC-004"
+    ],
+    "suggested_requirement": ""
+   }
+  ],
+  "threats": [
+   {
+    "id": "3c8c4de1-37d7-4d38-b9dc-69e4185201d2",
+    "stride": "Spoofing",
+    "threat": "Deepfake or synthetic media used to bypass liveness detection during remote onboarding.",
+    "asset": "Customer Identity",
+    "mitigated_by": [
+     "21efcea7-b174-4282-9480-4730fcd089f0"
+    ]
+   },
+   {
+    "id": "c1e6ed69-7114-4856-a565-3a23c32261fb",
+    "stride": "Tampering",
+    "threat": "Modification of KYC records or evidence in the database by an unauthorized internal user.",
+    "asset": "KYC Records",
+    "mitigated_by": [
+     "9fdc883d-76d0-4ada-a267-bd86381f58eb"
+    ]
+   },
+   {
+    "id": "fa33c969-898c-4cb8-9170-00dd109051b2",
+    "stride": "Repudiation",
+    "threat": "A branch manager denies approving an account freeze despite the action being taken.",
+    "asset": "Account Status",
+    "mitigated_by": [
+     "a9fa9a1e-1e9e-47d2-84a7-28e15ec0b0ae",
+     "9108d481-3fed-47fe-b237-179491456801"
+    ]
+   },
+   {
+    "id": "f9418fa0-0eb1-4648-920b-e89672b6b5c7",
+    "stride": "Information disclosure",
+    "threat": "Unauthorized access to full identity documents by staff members without a legitimate business need.",
+    "asset": "Identity Documents",
+    "mitigated_by": [
+     "9fdc883d-76d0-4ada-a267-bd86381f58eb",
+     "a88bc308-871a-4961-a439-b567a1cc3653"
+    ]
+   },
+   {
+    "id": "5e945534-33a2-41f1-96d0-d22941c5dd73",
+    "stride": "Denial of service",
+    "threat": "Flooding the self-declaration endpoint to prevent legitimate customers from updating their KYC status.",
+    "asset": "System Availability",
+    "mitigated_by": []
+   },
+   {
+    "id": "02b66bd6-1008-4bdc-9240-1b89e733fcfe",
+    "stride": "Elevation of privilege",
+    "threat": "A standard user exploits the integration layer to gain administrative access to the core banking system.",
+    "asset": "Core Banking System",
+    "mitigated_by": [
+     "24dcc8c8-d0e6-4b41-adb4-11a66dc55afb"
+    ]
+   },
+   {
+    "id": "68b41af7-6ce1-410c-ab65-dbe341988169",
+    "stride": "Tampering",
+    "threat": "Forged identity documents submitted during onboarding that pass initial automated checks.",
+    "asset": "Customer Identity",
+    "mitigated_by": [
+     "6566f790-9cf9-4d25-808d-c387222dff92"
+    ]
+   },
+   {
+    "id": "15752be8-9d3d-4f3e-92f5-63586451ecd1",
+    "stride": "Information disclosure",
+    "threat": "Leaking of customer PII during the transmission to the Central KYC Records Registry.",
+    "asset": "Customer PII",
+    "mitigated_by": [
+     "e7ad9f8c-ff7b-4a21-ad27-79d6f36f2bd9"
+    ]
+   }
+  ],
+  "security_sig": "1370b93f-29e0-404a-b2f8-b18f55d7f348:the system shall encrypt customer identifiers at rest|14f8efc6-d759-4ffa-a94f-665c3f5dd8e5:the system shall calculate each customer s next kyc due date from the risk category|1ba93533-3bbb-41ca-8da3-be9f5ec59664:the system shall notify customers via sms and email 7 days before the kyc due date|235f2dfb-c432-4c4f-98b2-5551b59bf16d:the system shall retain kyc records and refresh evidence for at least 5 years after the relationship ends|24dcc8c8-d0e6-4b41-adb4-11a66dc55afb:the system shall access existing core banking and crm platforms through the approved integration layer|2fa103e1-94aa-491b-97ff-1248205031b5:the system shall support verification of address change proof by an operations officer within 2 business days|310c7216-3cf9-4c7f-ab9e-12f58b2421e1:the system shall collect and verify proof of address when a customer reports an address change|4f428200-be08-477f-b722-5bc713e77695:the system shall submit refreshed records to the central kyc registry within 10 days|4fcdd662-484c-4984-9dc3-f6785d8f9b93:the system shall update kyc information for low risk customers at least every 10 years|60a93a48-0f51-4ad5-b49a-45e4492f8825:the system shall notify customers via sms and email at least 30 days before the kyc due date|65d47b27-e9d4-4391-b9e1-b0792ad311f5:the system shall update kyc information for medium risk customers at least every 8 years|7b126abf-8575-44d3-97ce-74ad9b13a5ac:the system shall send reminders at 30 days and 7 days before the due date|8fba3424-a196-412e-a7b5-db66c3b4d23f:the system shall let a customer submit a self declaration through the mobile app and net banking|9108d481-3fed-47fe-b237-179491456801:the system shall record every account freeze together with the approving branch manager|9605603b-3d6d-469a-9d9f-7fe53fabd678:the system shall produce a monthly compliance report of due completed and overdue refreshes|9611e821-90d9-4b28-9f6c-6a7d98856577:the system shall ensure kyc records and refresh evidence are retrievable within 24 hours for an auditor|a88bc308-871a-4961-a439-b567a1cc3653:the system shall mask customer identifiers on every screen except for authorised compliance staff|a9fa9a1e-1e9e-47d2-84a7-28e15ec0b0ae:the system shall require branch manager approval for every account freeze and record the approval|add21532-d623-47e2-b393-a4ac435e0b87:the system shall provide a self declaration feature in the mobile app and net banking for customers to confirm unchanged details|b1f2b785-4003-4957-941e-de36d8ddeb7a:the system shall prevent account freezing for missing updates until two reminders have been sent and 30 days have passed after the due date|c98adebc-1411-4640-baf7-40cd16e04ceb:the system shall support address change proof upload|e05616d9-8e86-4298-8ef5-db65f69d5ccd:the system shall update kyc information for high risk customers at least every 2 years|e7ad9f8c-ff7b-4a21-ad27-79d6f36f2bd9:the system shall upload updated kyc records to the central kyc records registry within 10 days",
+  "conflicts": [
+   {
+    "id": "78ebc922-64ad-4c9e-97d5-7200343b8e88",
+    "requirement_ids": [
+     "60a93a48-0f51-4ad5-b49a-45e4492f8825",
+     "1ba93533-3bbb-41ca-8da3-be9f5ec59664",
+     "7b126abf-8575-44d3-97ce-74ad9b13a5ac"
+    ],
+    "kind": "duplicate",
+    "explanation": "KYC-FR-002 and the combination of KYC-UX-001 and KYC-UX-002 both define the requirement to send reminders at 30 days and 7 days before the due date.",
+    "confidence": 0.9,
+    "status": "open",
+    "resolution": null,
+    "sig": "1ba93533-3bbb-41ca-8da3-be9f5ec59664:the system shall notify customers via sms and email 7 days before the kyc due date|60a93a48-0f51-4ad5-b49a-45e4492f8825:the system shall notify customers via sms and email at least 30 days before the kyc due date|7b126abf-8575-44d3-97ce-74ad9b13a5ac:the system shall send reminders at 30 days and 7 days before the due date"
+   },
+   {
+    "id": "d47cb3bc-0dca-468f-974c-b764873b2412",
+    "requirement_ids": [
+     "add21532-d623-47e2-b393-a4ac435e0b87",
+     "8fba3424-a196-412e-a7b5-db66c3b4d23f"
+    ],
+    "kind": "duplicate",
+    "explanation": "Both requirements specify the same functionality for customers to submit a self-declaration via mobile app and net banking.",
+    "confidence": 0.95,
+    "status": "open",
+    "resolution": null,
+    "sig": "8fba3424-a196-412e-a7b5-db66c3b4d23f:the system shall let a customer submit a self declaration through the mobile app and net banking|add21532-d623-47e2-b393-a4ac435e0b87:the system shall provide a self declaration feature in the mobile app and net banking for customers to confirm unchanged details"
+   },
+   {
+    "id": "aebb9a42-bb01-4d90-a2f2-6d3043b18d7d",
+    "requirement_ids": [
+     "e7ad9f8c-ff7b-4a21-ad27-79d6f36f2bd9",
+     "4f428200-be08-477f-b722-5bc713e77695"
+    ],
+    "kind": "duplicate",
+    "explanation": "Both requirements mandate the same 10-day deadline for uploading refreshed records to the central KYC registry.",
+    "confidence": 0.95,
+    "status": "open",
+    "resolution": null,
+    "sig": "4f428200-be08-477f-b722-5bc713e77695:the system shall submit refreshed records to the central kyc registry within 10 days|e7ad9f8c-ff7b-4a21-ad27-79d6f36f2bd9:the system shall upload updated kyc records to the central kyc records registry within 10 days"
+   },
+   {
+    "id": "4f17ccca-d008-45a9-88e5-1f303d76f377",
+    "requirement_ids": [
+     "a9fa9a1e-1e9e-47d2-84a7-28e15ec0b0ae",
+     "9108d481-3fed-47fe-b237-179491456801"
+    ],
+    "kind": "duplicate",
+    "explanation": "Both requirements mandate recording the branch manager's approval for account freezes.",
+    "confidence": 0.9,
+    "status": "open",
+    "resolution": null,
+    "sig": "9108d481-3fed-47fe-b237-179491456801:the system shall record every account freeze together with the approving branch manager|a9fa9a1e-1e9e-47d2-84a7-28e15ec0b0ae:the system shall require branch manager approval for every account freeze and record the approval"
+   }
+  ],
+  "conflict_sig": "0b1d2635-6d2d-453b-a302-ca26d62eb236:the system shall automatically purge or anonymize kyc records once the 5 year retention period post relationship has expired|1370b93f-29e0-404a-b2f8-b18f55d7f348:the system shall encrypt customer identifiers at rest|14f8efc6-d759-4ffa-a94f-665c3f5dd8e5:the system shall calculate each customer s next kyc due date from the risk category|15df064b-6d67-45d5-b87c-06410e34b429:the system shall trigger enhanced due diligence including additional evidence and compliance approval for customers categorised as high risk|1ba93533-3bbb-41ca-8da3-be9f5ec59664:the system shall notify customers via sms and email 7 days before the kyc due date|21efcea7-b174-4282-9480-4730fcd089f0:the system shall perform liveness detection and face matching against the identity document for remote onboarding and reject presentation attacks|235f2dfb-c432-4c4f-98b2-5551b59bf16d:the system shall retain kyc records and refresh evidence for at least 5 years after the relationship ends|24dcc8c8-d0e6-4b41-adb4-11a66dc55afb:the system shall access existing core banking and crm platforms through the approved integration layer|2fa103e1-94aa-491b-97ff-1248205031b5:the system shall support verification of address change proof by an operations officer within 2 business days|310c7216-3cf9-4c7f-ab9e-12f58b2421e1:the system shall collect and verify proof of address when a customer reports an address change|3868237d-1271-42f0-ae5e-a02d09f91d1a:the system shall encrypt all kyc documents and evidence at rest using industry standard algorithms|42a87f60-f0bc-4bb9-8c69-962146a04d40:the system shall maintain an immutable audit log of all manual approvals for account freezes|4f428200-be08-477f-b722-5bc713e77695:the system shall submit refreshed records to the central kyc registry within 10 days|4fcdd662-484c-4984-9dc3-f6785d8f9b93:the system shall update kyc information for low risk customers at least every 10 years|54b1fbb9-c246-4ca4-ab78-ac807c1034f2:the system shall implement secure communication channels tls 1 2 for all data transmissions between the mobile app web portal and backend|60a93a48-0f51-4ad5-b49a-45e4492f8825:the system shall notify customers via sms and email at least 30 days before the kyc due date|6566f790-9cf9-4d25-808d-c387222dff92:the system shall validate uploaded identity documents for authenticity and tampering and route doubtful documents to manual review|65d47b27-e9d4-4391-b9e1-b0792ad311f5:the system shall update kyc information for medium risk customers at least every 8 years|66420eeb-7087-41a3-9391-b598d876b6ad:the system shall identify politically exposed persons during onboarding and require senior management approval before activating their accounts|6b552537-c8cd-4b68-8691-de07d9cb011b:the system shall present a clear privacy notice and capture the customer s recorded consent with timestamp and purpose before collecting identity data or biometrics|7aaaf003-14f7-4771-9ab3-1cba696874e9:the system shall detect personal data incidents and support notifying the regulator and affected customers within the legal deadline|7ae0109e-f51a-45b7-9e3a-a60734be6c89:the system shall perform integrity checks on all uploaded proof of address documents to detect digital tampering|7b126abf-8575-44d3-97ce-74ad9b13a5ac:the system shall send reminders at 30 days and 7 days before the due date|8fba3424-a196-412e-a7b5-db66c3b4d23f:the system shall let a customer submit a self declaration through the mobile app and net banking|9108d481-3fed-47fe-b237-179491456801:the system shall record every account freeze together with the approving branch manager|92f2a4a7-f1bf-410e-a688-716dbfa1f9fe:the system shall implement multi factor authentication for all staff accessing the kyc management interface|9605603b-3d6d-469a-9d9f-7fe53fabd678:the system shall produce a monthly compliance report of due completed and overdue refreshes|9611e821-90d9-4b28-9f6c-6a7d98856577:the system shall ensure kyc records and refresh evidence are retrievable within 24 hours for an auditor|98c81090-b0a1-49d8-bf33-81ed6da28d97:the system shall provide a secure authenticated session for the self declaration feature to prevent unauthorized submission of data|9fdc883d-76d0-4ada-a267-bd86381f58eb:the system shall restrict access to kyc records by role on a least privilege basis and log every access to full identity documents|a34fee90-a453-45e8-8627-abefc6bfb302:the system shall identify and verify the beneficial owners of every legal entity customer and record the ownership structure|a88bc308-871a-4961-a439-b567a1cc3653:the system shall mask customer identifiers on every screen except for authorised compliance staff|a973e040-59aa-4396-9106-d48d4b476e73:the system shall let customers request access correction or erasure of their data and shall record where retention law overrides erasure|a9fa9a1e-1e9e-47d2-84a7-28e15ec0b0ae:the system shall require branch manager approval for every account freeze and record the approval|add21532-d623-47e2-b393-a4ac435e0b87:the system shall provide a self declaration feature in the mobile app and net banking for customers to confirm unchanged details|b1f2b785-4003-4957-941e-de36d8ddeb7a:the system shall prevent account freezing for missing updates until two reminders have been sent and 30 days have passed after the due date|c98adebc-1411-4640-baf7-40cd16e04ceb:the system shall support address change proof upload|e05616d9-8e86-4298-8ef5-db65f69d5ccd:the system shall update kyc information for high risk customers at least every 2 years|e4581f1c-c68c-4e52-9f5b-e05fbbbd669f:the system shall let compliance staff raise and file suspicious transaction reports within the regulatory deadline without notifying the customer|e7ad9f8c-ff7b-4a21-ad27-79d6f36f2bd9:the system shall upload updated kyc records to the central kyc records registry within 10 days|f410bc9e-6aa4-4113-bc8d-789e781a262b:the system shall implement rate limiting on the self declaration and document upload endpoints to prevent automated abuse|f5bf2ff6-7fab-44df-ab07-0e373ad0990d:the system shall screen customers and related parties against applicable sanctions lists at onboarding and whenever the lists are updated and hold the account until potential matches are resolved",
+  "risks": [
+   {
+    "id": "fe165799-2160-49f9-962d-e1c6fda58950",
+    "requirement_id": "e05616d9-8e86-4298-8ef5-db65f69d5ccd",
+    "risk": "Failure to trigger re-KYC for high-risk customers leads to regulatory non-compliance and increased exposure to money laundering.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Implement an automated scheduler that flags accounts based on risk profile and last KYC date.",
+    "confidence": 0.9
+   },
+   {
+    "id": "6dfc785e-8ee9-4363-baee-ea199eecf326",
+    "requirement_id": "65d47b27-e9d4-4391-b9e1-b0792ad311f5",
+    "risk": "Outdated KYC data for medium-risk customers may result in regulatory fines and inability to contact customers for fraud prevention.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 4,
+    "mitigation": "Automate periodic review cycles integrated with the core banking system.",
+    "confidence": 0.9
+   },
+   {
+    "id": "d89d7f54-7f79-4f36-a6d0-a829c41d75e5",
+    "requirement_id": "4fcdd662-484c-4984-9dc3-f6785d8f9b93",
+    "risk": "Long refresh intervals for low-risk customers could lead to stale data, hindering effective risk monitoring.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 3,
+    "mitigation": "Establish a centralized data refresh dashboard for monitoring compliance status.",
+    "confidence": 0.9
+   },
+   {
+    "id": "0dc1bead-4fec-424f-868d-2d1d822792bc",
+    "requirement_id": "60a93a48-0f51-4ad5-b49a-45e4492f8825",
+    "risk": "Missing the 30-day notification window results in poor customer experience and higher rates of account non-compliance.",
+    "risk_type": "operational",
+    "likelihood": 2,
+    "impact": 2,
+    "mitigation": "Implement a robust notification engine with delivery receipts.",
+    "confidence": 0.9
+   },
+   {
+    "id": "10b5374c-16e2-4cd6-8d6e-32e59942ad5a",
+    "requirement_id": "1ba93533-3bbb-41ca-8da3-be9f5ec59664",
+    "risk": "Failure to send the 7-day reminder increases the likelihood of account freezes, causing customer churn and support overhead.",
+    "risk_type": "operational",
+    "likelihood": 2,
+    "impact": 2,
+    "mitigation": "Automate multi-channel notification triggers.",
+    "confidence": 0.9
+   },
+   {
+    "id": "463f43bb-170b-44dd-8fc2-70bb8f3e829b",
+    "requirement_id": "add21532-d623-47e2-b393-a4ac435e0b87",
+    "risk": "Lack of a self-declaration feature forces manual branch visits, increasing operational costs and customer friction.",
+    "risk_type": "business",
+    "likelihood": 2,
+    "impact": 2,
+    "mitigation": "Prioritize development of the self-declaration module in the mobile app.",
+    "confidence": 0.9
+   },
+   {
+    "id": "5054a246-6719-4395-ac33-959f120b18c9",
+    "requirement_id": "310c7216-3cf9-4c7f-ab9e-12f58b2421e1",
+    "risk": "Vague verification standards for address changes may lead to fraudulent address updates and identity theft.",
+    "risk_type": "compliance",
+    "likelihood": 4,
+    "impact": 4,
+    "mitigation": "Define a strict list of acceptable proof-of-address documents and verification workflows.",
+    "confidence": 0.7
+   },
+   {
+    "id": "89b05e2f-2df7-4f5f-bbb8-82840d89fa8b",
+    "requirement_id": "e7ad9f8c-ff7b-4a21-ad27-79d6f36f2bd9",
+    "risk": "Ambiguity in the CKYCR upload process risks regulatory penalties for delayed or incorrect reporting.",
+    "risk_type": "compliance",
+    "likelihood": 4,
+    "impact": 5,
+    "mitigation": "Define clear technical specifications for CKYCR API integration and error handling.",
+    "confidence": 0.7
+   },
+   {
+    "id": "2ea48e88-e20e-4306-94ef-a352abe1dca8",
+    "requirement_id": "b1f2b785-4003-4957-941e-de36d8ddeb7a",
+    "risk": "Incorrect implementation of the freeze logic could lead to wrongful account suspension, causing legal and reputational damage.",
+    "risk_type": "operational",
+    "likelihood": 2,
+    "impact": 4,
+    "mitigation": "Implement a state-machine based logic for account status transitions.",
+    "confidence": 0.9
+   },
+   {
+    "id": "81d60812-9959-4ffc-b8c7-e1fc7bf9a625",
+    "requirement_id": "a9fa9a1e-1e9e-47d2-84a7-28e15ec0b0ae",
+    "risk": "Unauthorized account freezes could occur if the approval workflow is bypassed or not properly enforced.",
+    "risk_type": "security",
+    "likelihood": 2,
+    "impact": 4,
+    "mitigation": "Enforce mandatory digital signatures or MFA for manager approvals.",
+    "confidence": 0.9
+   },
+   {
+    "id": "f6e863fe-5d41-40c9-8b5a-6c3e6bdef9ad",
+    "requirement_id": "235f2dfb-c432-4c4f-98b2-5551b59bf16d",
+    "risk": "Failure to retain records for the required period leads to inability to respond to legal requests or audits.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 4,
+    "mitigation": "Implement automated data archival policies.",
+    "confidence": 0.9
+   },
+   {
+    "id": "2e23ea90-d803-4dd4-9964-aa80c67f5db6",
+    "requirement_id": "9611e821-90d9-4b28-9f6c-6a7d98856577",
+    "risk": "Inability to retrieve records within 24 hours results in audit failure and regulatory sanctions.",
+    "risk_type": "operational",
+    "likelihood": 2,
+    "impact": 4,
+    "mitigation": "Implement an indexed document management system with high availability.",
+    "confidence": 0.9
+   },
+   {
+    "id": "fbfafb0d-594d-47aa-a418-f94ed3a7a662",
+    "requirement_id": "1370b93f-29e0-404a-b2f8-b18f55d7f348",
+    "risk": "Unencrypted identifiers at rest expose the bank to data breaches and violation of privacy laws.",
+    "risk_type": "security",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Implement AES-256 encryption for all PII at rest.",
+    "confidence": 0.9
+   },
+   {
+    "id": "159e9c1f-457b-4713-a1e7-e811c5b29c4f",
+    "requirement_id": "a88bc308-871a-4961-a439-b567a1cc3653",
+    "risk": "Excessive exposure of PII to unauthorized staff increases the risk of internal data leakage.",
+    "risk_type": "security",
+    "likelihood": 4,
+    "impact": 4,
+    "mitigation": "Implement role-based access control (RBAC) and dynamic data masking.",
+    "confidence": 0.7
+   },
+   {
+    "id": "dd3c17e5-92ed-439b-9ea5-b72436e39a0b",
+    "requirement_id": "14f8efc6-d759-4ffa-a94f-665c3f5dd8e5",
+    "risk": "Incorrect calculation of due dates leads to missed compliance deadlines and regulatory exposure.",
+    "risk_type": "compliance",
+    "likelihood": 4,
+    "impact": 4,
+    "mitigation": "Define explicit business rules for risk-based due date calculation.",
+    "confidence": 0.7
+   },
+   {
+    "id": "390c890e-ac4b-4196-86c3-154142817b14",
+    "requirement_id": "7b126abf-8575-44d3-97ce-74ad9b13a5ac",
+    "risk": "Ambiguous reminder logic may result in no notifications being sent, leading to mass account freezes.",
+    "risk_type": "operational",
+    "likelihood": 4,
+    "impact": 3,
+    "mitigation": "Specify exact timing and trigger conditions for notifications.",
+    "confidence": 0.7
+   },
+   {
+    "id": "0d098a9b-88b2-4ec1-9c04-bbb4bf3cacce",
+    "requirement_id": "8fba3424-a196-412e-a7b5-db66c3b4d23f",
+    "risk": "Lack of clear submission workflows for self-declaration leads to data integrity issues and customer frustration.",
+    "risk_type": "operational",
+    "likelihood": 4,
+    "impact": 2,
+    "mitigation": "Design a structured UI flow for self-declaration submission.",
+    "confidence": 0.7
+   },
+   {
+    "id": "39f90294-0f0b-41ed-a39f-0a689cdc8676",
+    "requirement_id": "c98adebc-1411-4640-baf7-40cd16e04ceb",
+    "risk": "Incomplete support for address-change uploads prevents customers from updating records, causing compliance gaps.",
+    "risk_type": "operational",
+    "likelihood": 4,
+    "impact": 3,
+    "mitigation": "Define file format, size, and validation requirements for uploads.",
+    "confidence": 0.7
+   },
+   {
+    "id": "b8ebffd8-58b8-488b-8980-4d779777a660",
+    "requirement_id": "2fa103e1-94aa-491b-97ff-1248205031b5",
+    "risk": "Undefined verification SLAs lead to operational bottlenecks and delayed compliance updates.",
+    "risk_type": "operational",
+    "likelihood": 4,
+    "impact": 3,
+    "mitigation": "Establish a queue management system with automated SLA monitoring.",
+    "confidence": 0.7
+   },
+   {
+    "id": "f23e5bdc-61fc-4647-865f-e4b120ac1fc3",
+    "requirement_id": "4f428200-be08-477f-b722-5bc713e77695",
+    "risk": "Vague submission requirements to the central registry lead to data rejection and non-compliance.",
+    "risk_type": "compliance",
+    "likelihood": 4,
+    "impact": 5,
+    "mitigation": "Standardize the data mapping and validation schema for registry submissions.",
+    "confidence": 0.7
+   },
+   {
+    "id": "34072fc7-0be2-4272-b9ac-83ba1621d9bb",
+    "requirement_id": "9108d481-3fed-47fe-b237-179491456801",
+    "risk": "Missing audit trails for account freezes prevent accountability and legal defense in case of disputes.",
+    "risk_type": "compliance",
+    "likelihood": 4,
+    "impact": 4,
+    "mitigation": "Implement immutable logging for all administrative actions.",
+    "confidence": 0.7
+   },
+   {
+    "id": "375e1e0b-5ecc-4d50-bf00-cae1dc266019",
+    "requirement_id": "9605603b-3d6d-469a-9d9f-7fe53fabd678",
+    "risk": "Lack of reporting capabilities prevents management from identifying systemic compliance failures.",
+    "risk_type": "business",
+    "likelihood": 4,
+    "impact": 3,
+    "mitigation": "Develop a reporting module with automated compliance dashboards.",
+    "confidence": 0.7
+   },
+   {
+    "id": "15aa45d3-6571-48d8-a3e6-c70eab522895",
+    "requirement_id": "24dcc8c8-d0e6-4b41-adb4-11a66dc55afb",
+    "risk": "Unsecured or poorly defined integrations expose core banking systems to unauthorized access.",
+    "risk_type": "security",
+    "likelihood": 4,
+    "impact": 5,
+    "mitigation": "Use an API gateway with strict authentication and rate limiting.",
+    "confidence": 0.7
+   },
+   {
+    "id": "2f2f63c9-6afe-44c7-ad65-6fc6a01e9b9f",
+    "requirement_id": "f5bf2ff6-7fab-44df-ab07-0e373ad0990d",
+    "risk": "Failure to screen against sanctions lists leads to severe legal penalties and involvement in illicit financial activities.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Integrate real-time sanctions screening with automated blocking.",
+    "confidence": 0.9
+   },
+   {
+    "id": "e93d1060-7fa3-499b-a599-56687fa25de4",
+    "requirement_id": "66420eeb-7087-41a3-9391-b598d876b6ad",
+    "risk": "Failure to identify PEPs leads to regulatory scrutiny and reputational damage.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Implement automated PEP screening and mandatory senior management approval workflows.",
+    "confidence": 0.9
+   },
+   {
+    "id": "f1237ae1-cfc4-4808-b585-0a8916c45aae",
+    "requirement_id": "a34fee90-a453-45e8-8627-abefc6bfb302",
+    "risk": "Inaccurate UBO identification facilitates money laundering through complex corporate structures.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Implement mandatory UBO data collection and verification steps.",
+    "confidence": 0.9
+   },
+   {
+    "id": "18084a9e-8313-45cd-af75-0ffac6540825",
+    "requirement_id": "15df064b-6d67-45d5-b87c-06410e34b429",
+    "risk": "Inadequate EDD for high-risk customers increases the bank's exposure to financial crime.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Automate EDD triggers and compliance review workflows.",
+    "confidence": 0.9
+   },
+   {
+    "id": "236e9214-3596-4cc0-8899-42255271772d",
+    "requirement_id": "6b552537-c8cd-4b68-8691-de07d9cb011b",
+    "risk": "Collecting data without valid consent violates privacy laws and leads to heavy fines.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Implement a mandatory consent capture step before any data collection.",
+    "confidence": 0.9
+   },
+   {
+    "id": "8c42586a-3de5-4dd5-89f2-32d1b431bb9b",
+    "requirement_id": "e4581f1c-c68c-4e52-9f5b-e05fbbbd669f",
+    "risk": "Failure to file STRs correctly or timely leads to severe regulatory penalties and legal liability.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Provide a secure, restricted interface for STR filing.",
+    "confidence": 0.9
+   },
+   {
+    "id": "1daf29d2-3645-4067-a6cf-7bb9f87a6f75",
+    "requirement_id": "21efcea7-b174-4282-9480-4730fcd089f0",
+    "risk": "Weak liveness detection allows identity spoofing, leading to fraudulent account openings.",
+    "risk_type": "security",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Use certified liveness detection software.",
+    "confidence": 0.9
+   },
+   {
+    "id": "929aa242-16dc-467b-ae8b-275f3113137b",
+    "requirement_id": "6566f790-9cf9-4d25-808d-c387222dff92",
+    "risk": "Failure to detect tampered documents allows fraudsters to bypass KYC controls.",
+    "risk_type": "security",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Implement automated document forensic analysis.",
+    "confidence": 0.9
+   },
+   {
+    "id": "9acdfd2e-eb7a-4ac2-b4bc-046f8ca1c603",
+    "requirement_id": "9fdc883d-76d0-4ada-a267-bd86381f58eb",
+    "risk": "Excessive access to KYC records increases the risk of insider threats and data theft.",
+    "risk_type": "security",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Enforce strict RBAC and audit all access logs.",
+    "confidence": 0.9
+   },
+   {
+    "id": "3db24743-6f1c-4a75-a5c0-3a14e01f1452",
+    "requirement_id": "7aaaf003-14f7-4771-9ab3-1cba696874e9",
+    "risk": "Delayed breach notification leads to regulatory fines and loss of customer trust.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Establish an automated incident response and notification plan.",
+    "confidence": 0.9
+   },
+   {
+    "id": "13a92ccc-79ac-453d-8324-079d182be705",
+    "requirement_id": "a973e040-59aa-4396-9106-d48d4b476e73",
+    "risk": "Failure to honor data rights leads to privacy law violations and legal action.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 4,
+    "mitigation": "Implement a data management module that tracks retention vs. erasure requests.",
+    "confidence": 0.9
+   },
+   {
+    "id": "14f0631b-3bb2-49a0-859f-c9a1fa4ec72f",
+    "requirement_id": "3868237d-1271-42f0-ae5e-a02d09f91d1a",
+    "risk": "Unencrypted documents are vulnerable to theft if the storage layer is compromised.",
+    "risk_type": "security",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Implement encryption at rest for all document storage.",
+    "confidence": 0.9
+   },
+   {
+    "id": "0b9ea52d-8a87-496f-905c-4640644cf754",
+    "requirement_id": "54b1fbb9-c246-4ca4-ab78-ac807c1034f2",
+    "risk": "Insecure communication channels allow man-in-the-middle attacks, compromising customer data.",
+    "risk_type": "security",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Enforce TLS 1.2+ and certificate pinning.",
+    "confidence": 0.9
+   },
+   {
+    "id": "d2b7f9fc-f837-4d2b-a269-55a0154b25e7",
+    "requirement_id": "42a87f60-f0bc-4bb9-8c69-962146a04d40",
+    "risk": "Lack of immutable logs allows for tampering with account freeze history, hindering investigations.",
+    "risk_type": "security",
+    "likelihood": 2,
+    "impact": 4,
+    "mitigation": "Use write-once-read-many (WORM) storage for audit logs.",
+    "confidence": 0.9
+   },
+   {
+    "id": "f7b94578-475f-4f00-add9-883a7b75ba16",
+    "requirement_id": "0b1d2635-6d2d-453b-a302-ca26d62eb236",
+    "risk": "Failure to purge data violates data minimization principles and increases liability.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 4,
+    "mitigation": "Automate data lifecycle management policies.",
+    "confidence": 0.9
+   },
+   {
+    "id": "fd76c8a1-236f-4b2d-91d9-90e0b9502e0a",
+    "requirement_id": "92f2a4a7-f1bf-410e-a688-716dbfa1f9fe",
+    "risk": "Compromised staff credentials could lead to unauthorized access to the entire KYC database.",
+    "risk_type": "security",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Enforce MFA for all administrative access.",
+    "confidence": 0.9
+   },
+   {
+    "id": "d6aaeb31-cdb3-4f57-b39a-2f3193448bf8",
+    "requirement_id": "7ae0109e-f51a-45b7-9e3a-a60734be6c89",
+    "risk": "Digital tampering of documents goes undetected, allowing fraudulent address updates.",
+    "risk_type": "security",
+    "likelihood": 2,
+    "impact": 4,
+    "mitigation": "Implement automated integrity checks on all uploads.",
+    "confidence": 0.9
+   },
+   {
+    "id": "d9a46598-e5f0-4424-ad62-d8bf9a1707fb",
+    "requirement_id": "98c81090-b0a1-49d8-bf33-81ed6da28d97",
+    "risk": "Unauthorized submission of self-declarations leads to data corruption and compliance failures.",
+    "risk_type": "security",
+    "likelihood": 2,
+    "impact": 3,
+    "mitigation": "Ensure all self-declaration endpoints require authenticated sessions.",
+    "confidence": 0.9
+   },
+   {
+    "id": "54752b5d-5aba-4619-af91-b4686f1524f1",
+    "requirement_id": "f410bc9e-6aa4-4113-bc8d-789e781a262b",
+    "risk": "Lack of rate limiting allows for automated abuse or DoS attacks on the KYC portal.",
+    "risk_type": "security",
+    "likelihood": 2,
+    "impact": 3,
+    "mitigation": "Implement rate limiting at the API gateway level.",
+    "confidence": 0.9
+   }
+  ],
+  "sdlc": {
+   "signature": "",
+   "factors": [
+    {
+     "key": "stability",
+     "label": "Requirement stability",
+     "score": 5,
+     "evidence": "12 of 23 requirements are still vague, 4 open conflict(s), 0 hedging phrase(s) and 15 finality phrase(s) (final, approved, signed off) in the inputs."
+    },
+    {
+     "key": "regulatory",
+     "label": "Regulatory criticality",
+     "score": 4,
+     "evidence": "11 of 23 requirements map to regulations; 21 mandatory controls apply; 0 uncovered."
+    },
+    {
+     "key": "security",
+     "label": "Security risk",
+     "score": 2,
+     "evidence": "17% of requirements are security/privacy; 7 rated high risk."
+    },
+    {
+     "key": "complexity",
+     "label": "Project complexity",
+     "score": 3,
+     "evidence": "23 requirements, 13% integration-related, 4 conflict(s)."
+    },
+    {
+     "key": "size",
+     "label": "System size",
+     "score": 4,
+     "evidence": "23 stated requirements."
+    },
+    {
+     "key": "legacy",
+     "label": "Legacy-system dependence",
+     "score": 3,
+     "evidence": "Mentions: core banking, registry."
+    },
+    {
+     "key": "change",
+     "label": "Expected frequency of change",
+     "score": 3,
+     "evidence": "8 change/iteration phrase(s); instability index 0.12."
+    },
+    {
+     "key": "continuous_delivery",
+     "label": "Need for continuous delivery",
+     "score": 2,
+     "evidence": "Mentions: no continuous-delivery language."
+    },
+    {
+     "key": "stakeholder_availability",
+     "label": "Stakeholder availability",
+     "score": 3,
+     "evidence": "No statement about stakeholder availability; assumed moderate."
+    },
+    {
+     "key": "documentation",
+     "label": "Documentation and testing demand",
+     "score": 4,
+     "evidence": "Regulatory criticality 4/5 and 17% audit/reporting requirements demand traceable documentation."
+    },
+    {
+     "key": "schedule",
+     "label": "Budget and schedule pressure",
+     "score": 2,
+     "evidence": "Mentions: deadline."
+    },
+    {
+     "key": "verification",
+     "label": "Need for formal verification",
+     "score": 3,
+     "evidence": "Derived from regulatory criticality (4/5) and security risk (2/5); verification terms: none."
+    },
+    {
+     "key": "failure_consequence",
+     "label": "Consequence of failure",
+     "score": 3,
+     "evidence": "7 high-risk requirement(s); average impact 4.1/5."
+    },
+    {
+     "key": "technical_uncertainty",
+     "label": "Technical uncertainty",
+     "score": 2,
+     "evidence": "0 hedging phrase(s), 52% vague requirements; mentions: none."
+    }
+   ],
+   "ranking": [
+    {
+     "model": "Waterfall",
+     "score": 73.5,
+     "reasons": [
+      "Fits: Requirement stability is 5/5 (ideal 5).",
+      "Fits: Regulatory criticality is 4/5 (ideal 4).",
+      "Fits: Legacy-system dependence is 3/5 (ideal 3).",
+      "Tension: Expected frequency of change is 3/5 (ideal 1)."
+     ]
+    },
+    {
+     "model": "Agile-V hybrid",
+     "score": 64.4,
+     "reasons": [
+      "Fits: System size is 4/5 (ideal 4).",
+      "Fits: Legacy-system dependence is 3/5 (ideal 3).",
+      "Fits: Documentation and testing demand is 4/5 (ideal 4).",
+      "Tension: Security risk is 2/5 (ideal 4).",
+      "Tension: Requirement stability is 5/5 (ideal 3)."
+     ]
+    },
+    {
+     "model": "V-Model",
+     "score": 62.6,
+     "reasons": [
+      "Fits: Project complexity is 3/5 (ideal 3).",
+      "Fits: Legacy-system dependence is 3/5 (ideal 3).",
+      "Fits: Stakeholder availability is 3/5 (ideal 3).",
+      "Tension: Security risk is 2/5 (ideal 4).",
+      "Tension: Consequence of failure is 3/5 (ideal 5)."
+     ]
+    },
+    {
+     "model": "Agile-DevSecOps hybrid",
+     "score": 54.5,
+     "reasons": [
+      "Fits: Regulatory criticality is 4/5 (ideal 4).",
+      "Fits: System size is 4/5 (ideal 4).",
+      "Fits: Legacy-system dependence is 3/5 (ideal 3).",
+      "Tension: Budget and schedule pressure is 2/5 (ideal 4).",
+      "Tension: Requirement stability is 5/5 (ideal 3)."
+     ]
+    },
+    {
+     "model": "DevSecOps",
+     "score": 47.7,
+     "reasons": [
+      "Fits: Project complexity is 3/5 (ideal 3).",
+      "Fits: System size is 4/5 (ideal 4).",
+      "Fits: Legacy-system dependence is 3/5 (ideal 3).",
+      "Tension: Budget and schedule pressure is 2/5 (ideal 4).",
+      "Tension: Requirement stability is 5/5 (ideal 3)."
+     ]
+    },
+    {
+     "model": "Spiral",
+     "score": 45.2,
+     "reasons": [
+      "Fits: System size is 4/5 (ideal 4).",
+      "Fits: Legacy-system dependence is 3/5 (ideal 3).",
+      "Fits: Expected frequency of change is 3/5 (ideal 3).",
+      "Tension: Security risk is 2/5 (ideal 4).",
+      "Tension: Requirement stability is 5/5 (ideal 1)."
+     ]
+    },
+    {
+     "model": "Agile (Scrum/Kanban)",
+     "score": 39.4,
+     "reasons": [
+      "Fits: Security risk is 2/5 (ideal 2).",
+      "Fits: Project complexity is 3/5 (ideal 3).",
+      "Fits: Consequence of failure is 3/5 (ideal 2).",
+      "Tension: Requirement stability is 5/5 (ideal 2).",
+      "Tension: Budget and schedule pressure is 2/5 (ideal 4)."
+     ]
+    }
+   ],
+   "recommended": "Waterfall",
+   "chosen": "Waterfall",
+   "narrative": {
+    "explanation": "The Waterfall model is the most suitable choice because the project requires high levels of documentation and testing (4/5) to satisfy regulatory criticality (4/5) and audit requirements. While requirement stability is currently low (5/5) due to 12 vague requirements and 4 open conflicts, the project's focus on mandatory controls and legacy system integration benefits from the structured, sequential approach of Waterfall. The runner-up, Agile-V hybrid, offers more flexibility to address the current requirement ambiguity, but Waterfall provides the necessary rigor for the 7 high-risk security requirements and the overall consequence of failure (3/5).",
+    "tradeoffs": [
+     "Reduced ability to pivot quickly as requirements clarify.",
+     "Delayed discovery of integration issues with core banking systems.",
+     "Higher risk of rework if the 12 vague requirements are misinterpreted during the initial design phase."
+    ],
+    "would_change_if": [
+     "If the 12 vague requirements are finalized and conflicts are resolved, the V-Model would become more attractive for its superior verification capabilities.",
+     "If the project timeline shifts to require continuous delivery, an Agile-DevSecOps hybrid would overtake Waterfall."
+    ]
+   },
+   "workflow": [
+    {
+     "name": "Requirements and compliance baseline",
+     "goal": "Turn stakeholder input into an approved, traceable requirement baseline.",
+     "activities": [
+      "Resolve 4 open conflict(s) between stakeholder requirements",
+      "Resolve or consciously accept 12 open clarification question(s)",
+      "Interview remaining stakeholders and resolve open clarification questions",
+      "Classify and prioritise requirements; resolve conflicts between stakeholders",
+      "Map each requirement to regulations and mandatory controls",
+      "Agree customer-risk categories and onboarding journeys (retail, entity, remote)"
+     ],
+     "roles": [
+      "Business analyst",
+      "Product owner",
+      "Compliance officer",
+      "Security architect"
+     ],
+     "deliverables": [
+      "Approved requirement baseline",
+      "Compliance-control matrix",
+      "Requirements traceability matrix",
+      "Risk register v1",
+      "Mitigation plan for: Ambiguity in the CKYCR upload process risks regulatory penalties for d; Vague submission requirements to the central registry lead to data rej; Unsecured or poorly defined integrations expose core banking systems t"
+     ],
+     "security_activities": [
+      "Data classification of KYC data",
+      "Privacy impact assessment scoping",
+      "Initial threat model"
+     ],
+     "testing": [
+      "Requirement review against acceptance-criteria quality checklist"
+     ],
+     "compliance_checkpoints": [
+      "Compliance officer confirms regulatory mappings",
+      "Legal review of high-impact interpretations",
+      "Confirm applicable jurisdictions: IN, GLOBAL"
+     ],
+     "entry_criteria": [
+      "Stakeholder inputs collected and PII-masked"
+     ],
+     "exit_criteria": [
+      "No unresolved conflicts or blocking questions",
+      "Baseline approved"
+     ],
+     "approval_gate": "Requirements baseline approval (project manager, architect, security, compliance)",
+     "traceability": "Every deliverable links back to requirement ids and their source statements."
+    },
+    {
+     "name": "System design",
+     "goal": "Design the KYC onboarding architecture against the baseline.",
+     "activities": [
+      "Design identity verification, screening and risk-rating components",
+      "Define data model, retention and audit logging",
+      "Design integrations (registries, screening vendors, core banking)"
+     ],
+     "roles": [
+      "Architect",
+      "Security architect",
+      "Data protection officer"
+     ],
+     "deliverables": [
+      "Architecture and interface specification",
+      "Data-flow and retention design",
+      "Security design"
+     ],
+     "security_activities": [
+      "Threat modelling (STRIDE) of every data flow",
+      "Encryption and key-management design"
+     ],
+     "testing": [
+      "Design review against each requirement"
+     ],
+     "compliance_checkpoints": [
+      "Privacy-by-design review"
+     ],
+     "entry_criteria": [
+      "Baseline approved"
+     ],
+     "exit_criteria": [
+      "Design signed off, traceable to requirements"
+     ],
+     "approval_gate": "Design approval (architect, security, compliance)",
+     "traceability": "Every deliverable links back to requirement ids and their source statements."
+    },
+    {
+     "name": "Implementation",
+     "goal": "Build the system to the approved design.",
+     "activities": [
+      "Implement services and integrations",
+      "Implement configurable rules for risk rating and re-KYC"
+     ],
+     "roles": [
+      "Developers",
+      "Tech lead"
+     ],
+     "deliverables": [
+      "Working software",
+      "Build documentation"
+     ],
+     "security_activities": [
+      "Secure coding standards",
+      "Static analysis and dependency scanning"
+     ],
+     "testing": [
+      "Unit tests per requirement"
+     ],
+     "compliance_checkpoints": [
+      "Code review evidence retained"
+     ],
+     "entry_criteria": [
+      "Design approved"
+     ],
+     "exit_criteria": [
+      "All requirements implemented, unit tests pass"
+     ],
+     "approval_gate": "Code-complete review",
+     "traceability": "Every deliverable links back to requirement ids and their source statements."
+    },
+    {
+     "name": "Verification",
+     "goal": "Prove the system meets the requirements.",
+     "activities": [
+      "System and integration testing",
+      "Security and penetration testing",
+      "Accuracy testing of identity verification and screening",
+      "Performance and availability testing"
+     ],
+     "roles": [
+      "QA lead",
+      "Security testers"
+     ],
+     "deliverables": [
+      "Test reports",
+      "Traceability matrix with test results"
+     ],
+     "security_activities": [
+      "Penetration test",
+      "Presentation-attack testing for liveness"
+     ],
+     "testing": [
+      "System, integration, security and performance tests"
+     ],
+     "compliance_checkpoints": [
+      "Compliance test evidence per control"
+     ],
+     "entry_criteria": [
+      "Code complete"
+     ],
+     "exit_criteria": [
+      "All critical defects closed; coverage of every requirement"
+     ],
+     "approval_gate": "Test-exit approval",
+     "traceability": "Every deliverable links back to requirement ids and their source statements."
+    },
+    {
+     "name": "Deployment and acceptance",
+     "goal": "Release to production under compliance sign-off.",
+     "activities": [
+      "User acceptance by operations and compliance",
+      "Production deployment and cut-over",
+      "Staff training"
+     ],
+     "roles": [
+      "Product owner",
+      "Operations",
+      "Compliance officer"
+     ],
+     "deliverables": [
+      "Release package",
+      "Go-live approval record"
+     ],
+     "security_activities": [
+      "Production hardening",
+      "Access review"
+     ],
+     "testing": [
+      "User acceptance test"
+     ],
+     "compliance_checkpoints": [
+      "Compliance officer sign-off before first real customer is onboarded"
+     ],
+     "entry_criteria": [
+      "Verification complete"
+     ],
+     "exit_criteria": [
+      "Acceptance signed"
+     ],
+     "approval_gate": "Production-readiness approval",
+     "traceability": "Every deliverable links back to requirement ids and their source statements."
+    },
+    {
+     "name": "Operations and maintenance",
+     "goal": "Run, monitor and keep the system compliant.",
+     "activities": [
+      "Monitor alerts and turnaround",
+      "Process regulatory change",
+      "Periodic KYC refresh operations"
+     ],
+     "roles": [
+      "Operations",
+      "Compliance officer"
+     ],
+     "deliverables": [
+      "Operations runbook",
+      "Regulatory change log"
+     ],
+     "security_activities": [
+      "Vulnerability management",
+      "Access recertification"
+     ],
+     "testing": [
+      "Regression testing for changes"
+     ],
+     "compliance_checkpoints": [
+      "Change approval gate for any requirement change",
+      "No real customer data in non-production environments"
+     ],
+     "entry_criteria": [
+      "Live"
+     ],
+     "exit_criteria": [
+      "Stable operation"
+     ],
+     "approval_gate": "Change approval for each baseline change",
+     "traceability": "Every deliverable links back to requirement ids and their source statements."
+    }
+   ]
+  },
+  "validation": {
+   "gates": [
+    {
+     "id": "traceability",
+     "title": "Every stated requirement traces to a source quote",
+     "passed": true,
+     "detail": "All traceable."
+    },
+    {
+     "id": "criteria",
+     "title": "Every requirement has acceptance criteria",
+     "passed": true,
+     "detail": "All have criteria."
+    },
+    {
+     "id": "clarity",
+     "title": "Weak requirements are answered or consciously skipped",
+     "passed": false,
+     "detail": "12 still have open questions"
+    },
+    {
+     "id": "conflicts",
+     "title": "No unresolved stakeholder conflicts",
+     "passed": false,
+     "detail": "4 open"
+    },
+    {
+     "id": "controls",
+     "title": "No mandatory control is left uncovered",
+     "passed": true,
+     "detail": "All applicable controls have a requirement."
+    }
+   ],
+   "metrics": {
+    "requirements": 42,
+    "stated": 23,
+    "derived": 19,
+    "weak": 12,
+    "open_questions": 12,
+    "open_conflicts": 4,
+    "completeness_pct": 100.0,
+    "traceability_pct": 100.0,
+    "control_coverage_pct": 85.7,
+    "controls_partial": 3,
+    "controls_gap": 0,
+    "needs_legal_review": 5,
+    "avg_confidence": 0.8,
+    "hallucinations_dropped": 1,
+    "baseline_ready": false
+   }
+  },
+  "last_run": {
+   "at": "2026-11-26T20:01:38+00:00",
+   "kind": "analyse",
+   "seconds": 100.5,
+   "llm_calls": 11,
+   "model": "gemini-3.1-flash-lite"
+  }
+ }
+}

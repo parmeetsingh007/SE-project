@@ -1,0 +1,10 @@
+Board-approved KYC Refresh Policy, version 3.1 (final, approved)
+
+1. Customers rated high risk must have their KYC information updated at least every 2 years, medium risk every 8 years and low risk every 10 years.
+2. The bank must notify each customer at least 30 days before the due date by SMS and email, and again at 7 days.
+3. Customers may confirm that their details are unchanged through a self-declaration in the mobile app or net banking, without visiting a branch.
+4. Where the address has changed, a proof of the new address must be collected and verified.
+5. Updated KYC records must be uploaded to the Central KYC Records Registry within 10 days.
+6. Accounts must not be frozen for a missing update until two reminders have been sent and 30 days have passed after the due date. Every freeze must be approved by a branch manager and recorded.
+7. All KYC records and refresh evidence must be retained for at least 5 years after the relationship ends and be retrievable within 24 hours for an auditor.
+8. Customer identifiers must be encrypted at rest and masked on every screen except for authorised compliance staff.

@@ -4,140 +4,107 @@ Guidance for Claude Code when working in this repository.
 
 ## Project
 
-**KYCompass — Agentic AI Requirement-Gathering & SDLC Recommendation System**
+**KYCompass**: an agentic AI system for requirement gathering, analysis and SDLC recommendation in
+**customer onboarding and KYC**. It takes vague stakeholder input (pasted text or `.txt .md .eml
+.docx .pdf`), extracts requirements, maps them to KYC / AML / data-protection regulations, scores
+risk, asks *optional* clarification questions about weak requirements, recommends an SDLC with a
+project-specific workflow, and produces an SRS and related artefacts behind human approval gates.
 
-A multi-agent system that ingests stakeholder input (interviews, policy docs, regulatory
-text) about a payment-processing feature, extracts and validates structured software
-requirements, maps them to payment regulations, and recommends an SDLC approach with a
-generated project workflow. This is a college course project — favor a working,
-demonstrable MVP over production hardening. Scope is deliberately narrowed to ONE
-financial sector (payment processing) out of the eight named in the original problem
-statement.
+This is a college course project (problem statement: "Agentic AI ... requirement gathering,
+analysis and SDLC identification in the financial sector"). Favour a working, demonstrable
+product over production hardening. Scope is one sector: KYC / onboarding.
 
-## Reference use case
+The previous incarnation (payment-processing, Streamlit) lives on `main` / earlier history; this
+codebase replaced it on the `kyc-redesign` branch.
 
-Anchor all sample data, prompts, and demos on this scenario unless told otherwise:
+## Run, test
 
-> A bank wants to add step-up authentication for payments above a risk threshold, and
-> needs requirements gathered from business, security, and compliance stakeholders,
-> checked against payment regulations (PCI-DSS, RBI payment/authentication guidelines),
-> and turned into an SRS with a recommended SDLC approach.
+```bash
+.venv/bin/uvicorn src.api.main:app --port 8000     # website + API at http://localhost:8000
+.venv/bin/python -m pytest -q                       # fully offline; fake agents stand in for Gemini
+```
 
-Sample stakeholder transcripts, policy snippets, and regulation excerpts for this
-scenario live in `data/sample_inputs/`. Add more scenarios later only after this one
-works end-to-end.
+`GOOGLE_API_KEY` goes in `.env` (see `.env.example`). Never hardcode or print it.
 
-## Architecture (5 layers, per the course problem statement)
+## Architecture
 
-1. **Input layer** — sample transcripts / policy docs / regulation text (`data/`)
-2. **Multi-agent layer** — `src/agents/`, one file per agent, orchestrated by `src/orchestration/pipeline.py`
-3. **Knowledge & retrieval layer** — `src/knowledge_base/` (ChromaDB + retriever), holds
-   payment regulations, bank policies, requirement templates
-4. **Human-in-the-loop layer** — approval gate in the Streamlit UI (`src/ui/app.py`);
-   nothing reaches "approved" status without an explicit click
-5. **Output layer** — generated SRS, user stories, traceability matrix, SDLC workflow
-   written to `docs/generated/`
+```
+web (src/web, plain HTML/CSS/JS)  ->  FastAPI (src/api/main.py)  ->  Pipeline (src/pipeline/runner.py)
+                                                                       -> agents (src/agents) -> Gemini
+                                                                       -> SQLite (src/models/db.py)
+```
 
-## Agents to implement (`src/agents/`)
+* **Control flow is code, never the model.** `Pipeline._run` runs eleven stages in a fixed order:
+  extract, classify, quality, compliance, controls, security, conflicts, criteria, risk, sdlc,
+  validate. Each per-requirement stage records processed ids in `project.analysis["done"]`, so
+  re-runs, answered questions, edits and retries after a quota error only do outstanding work.
+* **Batch agents.** One model call handles the whole project per stage (about 12 calls per
+  analysis) because Gemini's free tier allows 15 requests/minute. Do not reintroduce per-requirement
+  calls without a reason.
+* **Every agent** has a system prompt that forces JSON-only output, validates it against a Pydantic
+  model (`call_agent_json` in `src/agents/llm_client.py`), and raises `AgentOutputError` on bad
+  output. Never pass raw model text downstream, never swallow a parse failure.
+* **Rate limiting and retry** live in `llm_client.py` (process-wide sliding window plus backoff
+  that honours Google's `retryDelay`). A quota failure raises `RateLimitedError`; the job fails but
+  finished stages are saved and **Resume analysis** continues.
+* **Background jobs** (`src/pipeline/jobs.py`) run on a thread; the UI polls `/api/projects/{id}/job`.
 
-Each agent is a small class/function with a single `run(input) -> output` interface,
-calling the Gemini API with a system prompt that forces structured JSON output.
-Log every agent call (input, output, timestamp) to the audit table for traceability.
+### Anti-hallucination guards (keep them)
 
-| File | Responsibility |
-|---|---|
-| `coordinator.py` | Orchestrates the pipeline, passes shared context between agents |
-| `stakeholder_interaction.py` | Turns a raw transcript into structured Q&A; asks a follow-up question when an answer is vague |
-| `extraction.py` | Pulls candidate requirement statements from transcripts/docs |
-| `clarification.py` | Flags incomplete/ambiguous requirements, sends them back |
-| `classification.py` | Multi-label tags: functional, security, compliance, performance, etc. |
-| `conflict_detection.py` | Flags contradicting or duplicate requirements |
-| `compliance.py` | Maps requirements to PCI-DSS / RBI clauses via the retriever; never makes a final legal call, only proposes with citation + confidence |
-| `security_privacy.py` | Flags implicit security/privacy needs (encryption, auth, data retention) |
-| `acceptance_criteria.py` | Drafts concrete, testable acceptance criteria per requirement (added post-hoc so validation.py's completeness check has something real to check) |
-| `risk_analysis.py` | Scores business/technical/compliance risk per requirement |
-| `sdlc_selection.py` | Recommends SDLC model(s) with ranked confidence, from project characteristics |
-| `documentation.py` | Generates SRS.md, user_stories.md, traceability_matrix.csv |
-| `validation.py` | Final completeness/consistency check before human review |
-| `human_approval.py` | Not an LLM call — just the data contract for what the UI needs to render an approval decision |
+* Extraction must quote the source **verbatim**; an ungrounded quote drops the requirement and is
+  counted (`find_grounding`).
+* Compliance may only cite clause ids the retriever returned **for that requirement**; others are
+  dropped and counted. High-impact clauses and confidence < 0.6 set `needs_legal_review`.
+* SDLC scores come from the deterministic engine (`src/sdlc/engine.py`). The model only writes the
+  explanation and must not change scores.
+* The compliance agent never makes a legal determination.
+
+### Security controls (keep them)
+
+* `src/security/gate.py::secure_input` quarantines prompt-injection text and masks PII **before**
+  anything is stored or sent to the model. Raw text is never persisted.
+* Stakeholder text is wrapped in `<untrusted_document>` tags and never placed in a system prompt.
+* Roles and gates are in `src/pipeline/approvals.py`. Sensitive requirements (high risk and
+  security/privacy/regulatory, or needing legal review) need a security, compliance or architect role.
+  Auth is a demo (client-stated name and role); real roles must come from an identity provider.
+* `src/models/audit.py` is a hash-chained append-only log. `record()` for actions,
+  `record_llm_call()` for model calls, `verify_chain()` to detect tampering.
 
 ## Data model
 
-Requirement fields (see `src/models/requirement.py`, Pydantic + SQLAlchemy):
-`id, batch_id, statement, category (list), source_stakeholder, business_justification,
-priority, dependencies, assumptions, acceptance_criteria, applicable_regulations,
-risk_level, confidence_score, approval_status, source_excerpt, open_questions,
-processing_complete`.
+`src/models/requirement.py` holds the contracts: `Requirement` (id, readable `ref` like
+`KYC-SEC-004`, statement, 13-way multi-label `categories`, `primary_category`, source stakeholder /
+document / verbatim excerpt, justification, priority, dependencies, assumptions, acceptance
+criteria, `regulations`, risk level and scores, `confidence_score`, `approval_status`, `origin`
+(`stated` or `derived`), quality flags, `is_weak`, history), `Question` (optional, status
+open/answered/skipped, `applied`), `Conflict`, `ControlCoverage`, `RiskItem`, `Threat`, `Factor`,
+`SdlcOption`, `WorkflowPhase`.
 
-`batch_id` groups every requirement produced by one transcript ingestion (see
-`Coordinator.run()`), so SDLC recommendation and doc generation can be scoped to one
-batch instead of mixing requirements from unrelated ingestions. A `BatchORM` row per
-batch (`src/models/db.py`) holds the ingestion timestamp, a transcript preview, and —
-once generated — that batch's SDLC recommendation.
+Persistence (`src/models/db.py`): projects (with `analysis` and `gates` JSON), documents (masked
+text only), requirements, questions, audit. Derived project-level results (conflicts, controls,
+risks, threats, SDLC, validation, guard counters) live in `project.analysis`.
 
-`source_excerpt`, `open_questions`, and `processing_complete` exist to make
-`Coordinator.resume()` possible: the per-requirement agent loop (compliance,
-clarification, security/privacy, acceptance criteria, risk analysis — the expensive
-part, ~5 Gemini calls per requirement) checkpoints after each requirement finishes,
-so a Gemini quota failure partway through a large batch doesn't force starting over.
-`resume(batch_id, ...)` re-loads the batch's requirements and only re-processes ones
-where `processing_complete` is still `False`.
+**Derived requirements** are added by the system from control gaps (`derived_reason` starts with
+`[C-...]`) and from security analysis. They are pending until a human decides.
 
-Store requirements, batches, and the audit log in SQLite (`src/models/db.py`) — no
-need for Postgres at this scale. `init_db()` migrates a database created before
-batch tracking existed: it adds the column, backfills old rows under a fixed
-`LEGACY_BATCH_ID`, and creates a matching batch row so History still shows them.
+## Knowledge base
 
-## Tech stack (decided — don't re-litigate unless asked)
-
-- Python 3.11, `google-genai` SDK (Gemini Flash) for all agent LLM calls
-- ChromaDB (local, persistent) for the knowledge base / RAG
-- SQLite via SQLAlchemy for structured requirements + audit log
-- FastAPI for the backend API (`src/api/main.py`)
-- Streamlit for the demo UI (`src/ui/app.py`) — fast to build, good enough for a course
-  demo; not React, don't suggest rewriting it
-- Pydantic for all structured LLM outputs and data contracts
-- pytest for tests
+`src/knowledge_base/data/regulations.json` (50 versioned, paraphrased clauses with source,
+jurisdiction, effective date, version, applicability, `high_impact`) and `controls.json` (21
+mandatory controls with keywords and suggested requirements). Retrieval is Chroma with a lexical
+fallback; tests force `KB_BACKEND=lexical`. Control applicability uses **whole-word** matching and
+only the stakeholders' own words (never derived text), which keeps re-runs stable.
 
 ## Conventions
 
-- Type hints everywhere; docstrings on every public function/class
-- Every agent's LLM call must request JSON-only output and validate it against a
-  Pydantic model before returning — never pass raw LLM text downstream
-- No agent silently drops data on a parse failure — log it and raise, don't swallow
-- Secrets in `.env` (see `.env.example`), never hardcoded
-- Keep each agent file under ~150 lines; if an agent is doing too much, that's a sign
-  it should be two agents
+* Python 3.11, type hints, docstrings on public classes/functions. Keep modules focused.
+* Tests must run offline: use the fakes in `tests/fakes.py`; never call Gemini from a test.
+* Front end is plain HTML/CSS/JS with no build step. Escape all dynamic text with `esc()`.
+  Static assets are served with `Cache-Control: no-cache` so browsers revalidate.
+* No emojis in the UI or docs. Comments only when the *why* is non-obvious.
+* Do not add the Claude co-author trailer to commits in this repo (owner's preference).
 
-## Build order (milestones — build and demo each before moving to the next)
+## Out of scope
 
-1. Data model + SQLite + one sample transcript ingested manually
-2. Coordinator + extraction + classification agents working on that one transcript
-3. Knowledge base populated with PCI-DSS/RBI excerpts + compliance agent doing RAG lookups
-4. Clarification, conflict-detection, security/privacy, risk-analysis agents
-5. SDLC selection agent + documentation agent (SRS/user stories/traceability output)
-6. Streamlit UI with the human-approval gate wired to the SQLite approval_status field
-7. End-to-end demo: raw transcript in → approved SRS + SDLC recommendation out
-8. Gap-closing pass against the original problem statement: `stakeholder_interaction.py`
-   (pre-extraction pass flagging vague transcript statements — simulates adaptive
-   interviewing on static transcripts, not a live conversational loop; see README) and
-   `validation.py` (final completeness/consistency check, run last before persistence)
-9. `acceptance_criteria.py`: closes validation.py's known gap by populating
-   Requirement.acceptance_criteria before validation runs, so its completeness check
-   has something real to check instead of always failing
-10. Gemini free-tier reliability pass: `llm_client.py` gained a process-wide sliding-
-    window rate limiter (paces every call to stay under 15 req/min instead of bursting
-    and hitting 429) plus real exponential backoff with Google's own suggested retry
-    delay when given. `Coordinator.run()` now checkpoints progress (persists
-    requirements right after classification, updates each one after it finishes the
-    per-requirement agent loop) so a quota failure partway through a batch is
-    resumable via `Coordinator.resume(batch_id, ...)` instead of a total loss. The
-    Streamlit UI catches `RateLimitedError` and shows a plain message + a Resume
-    button instead of a raw traceback.
-
-## Out of scope for this project
-
-- The other 7 financial sectors from the original problem statement
-- Real production security hardening (RBAC/MFA/encryption are a "describe in the report"
-  item, not a "build a real auth system" item, unless explicitly asked to implement them)
-- Multi-tenant / multi-organization support
+* Other financial sectors; multi-tenant support; real RBAC/MFA/encryption-at-rest (documented as
+  deployment concerns in the README); a gold-annotated evaluation harness (not built).

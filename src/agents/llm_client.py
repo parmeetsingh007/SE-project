@@ -26,7 +26,7 @@ from google.genai import types as genai_types
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.orm import Session
 
-from src.models.db import AuditLogORM
+from src.models.audit import record_llm_call
 
 DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-lite")
 
@@ -54,6 +54,10 @@ RETRYABLE_STATUS_CODES = {429, 503}
 # consistency every agent here actually needs.
 DEFAULT_TEMPERATURE = float(os.environ.get("GEMINI_TEMPERATURE", "0.2"))
 
+# Batch agents return one JSON object for the whole project, so the default
+# output cap would truncate long requirement lists mid-JSON.
+DEFAULT_MAX_OUTPUT_TOKENS = int(os.environ.get("GEMINI_MAX_OUTPUT_TOKENS", "16384"))
+
 T = TypeVar("T", bound=BaseModel)
 
 # Lets a UI show *why* a call is taking a while (rate-limit pacing, a 429/503
@@ -70,7 +74,7 @@ _status_sink: ContextVar[Callable[[str], None] | None] = ContextVar(
 def set_status_sink(callback: Callable[[str], None] | None) -> None:
     """Registers a callback invoked with a human-readable string whenever
     llm_client is waiting (rate-limit pacing or a retry backoff). Pass None
-    to stop reporting. The Streamlit UI uses this to show live progress."""
+    to stop reporting. The web UI uses this to show live progress."""
     _status_sink.set(callback)
 
 
@@ -88,7 +92,7 @@ class AgentOutputError(ValueError):
 
 class RateLimitedError(RuntimeError):
     """Raised when Gemini kept returning 429/503 after every retry was
-    exhausted. A distinct type so callers (the Streamlit UI) can catch just
+    exhausted. A distinct type so callers (the web UI) can catch just
     this and show a clear message instead of a raw traceback."""
 
 
@@ -135,6 +139,7 @@ def call_agent_json(
     db_session: Session | None = None,
     model: str = DEFAULT_MODEL,
     temperature: float = DEFAULT_TEMPERATURE,
+    max_output_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS,
 ) -> T:
     """Call Gemini with a JSON-only system prompt and validate the response.
 
@@ -145,22 +150,29 @@ def call_agent_json(
     """
     client = client or genai.Client(api_key=os.environ.get("GOOGLE_API_KEY"))
 
-    response = _generate_with_retry(client, model, user_content, system_prompt, temperature)
-    raw_text = response.text
+    response = _generate_with_retry(
+        client, model, user_content, system_prompt, temperature, max_output_tokens
+    )
+    raw_text = response.text or ""
 
     try:
         data = json.loads(raw_text)
         parsed = output_model.model_validate(data)
     except (json.JSONDecodeError, ValidationError) as exc:
-        _log_call(db_session, agent_name, user_content, f"PARSE_ERROR: {exc}\n{raw_text}")
+        _log_call(db_session, agent_name, user_content, f"PARSE_ERROR: {exc}\n{raw_text}", model)
         raise AgentOutputError(f"{agent_name} returned invalid JSON output: {exc}") from exc
 
-    _log_call(db_session, agent_name, user_content, raw_text)
+    _log_call(db_session, agent_name, user_content, raw_text, model)
     return parsed
 
 
 def _generate_with_retry(
-    client: genai.Client, model: str, user_content: str, system_prompt: str, temperature: float
+    client: genai.Client,
+    model: str,
+    user_content: str,
+    system_prompt: str,
+    temperature: float,
+    max_output_tokens: int = DEFAULT_MAX_OUTPUT_TOKENS,
 ) -> genai_types.GenerateContentResponse:
     """Calls generate_content, pacing every attempt through the shared rate
     limiter and retrying rate-limit/overload errors with backoff: the delay
@@ -175,6 +187,7 @@ def _generate_with_retry(
                     system_instruction=system_prompt,
                     response_mime_type="application/json",
                     temperature=temperature,
+                    max_output_tokens=max_output_tokens,
                 ),
             )
         except genai_errors.APIError as exc:
@@ -213,15 +226,10 @@ def _retry_delay_seconds(exc: genai_errors.APIError, attempt: int) -> float:
 
 
 def _log_call(
-    db_session: Session | None, agent_name: str, input_payload: str, output_payload: str
+    db_session: Session | None,
+    agent_name: str,
+    input_payload: str,
+    output_payload: str,
+    model: str = DEFAULT_MODEL,
 ) -> None:
-    if db_session is None:
-        return
-    db_session.add(
-        AuditLogORM(
-            agent_name=agent_name,
-            input_payload=input_payload,
-            output_payload=output_payload,
-        )
-    )
-    db_session.commit()
+    record_llm_call(db_session, agent_name, input_payload, output_payload, model)

@@ -1,0 +1,5 @@
+Memo from Elena Costa, MLRO. Subject: Merchant due diligence
+
+Every merchant must be screened against EU and UN sanctions lists at onboarding and daily afterwards. We must identify every beneficial owner holding more than 25 percent or exercising control, and verify them. Politically exposed persons need MLRO approval before activation. Merchants from high-risk third countries need enhanced due diligence.
+
+Automated rejection of a merchant must be reviewable by a human on request. All onboarding records are kept for five years after the relationship ends. The new EU AML regulation applies from 2027 and will change several of these rules, so thresholds and checks must be configurable rather than hard-coded. Suspicious activity must be reportable to the financial intelligence unit without alerting the merchant.

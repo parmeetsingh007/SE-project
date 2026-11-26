@@ -42,7 +42,7 @@ def test_blocks_until_the_window_frees_a_slot() -> None:
 
 
 def test_reports_status_while_waiting_out_the_window() -> None:
-    """A caller (the Streamlit UI) needs to know it's pacing, not stuck."""
+    """A caller (the web UI) needs to know it's pacing, not stuck."""
     limiter = _RateLimiter(limit=1, window_seconds=0.2)
     messages: list[str] = []
     set_status_sink(messages.append)

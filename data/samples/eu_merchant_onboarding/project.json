@@ -1,0 +1,7 @@
+{
+  "name": "EU merchant onboarding (KYB)",
+  "description": "A payments company onboards merchants across the EU. Regulation is heavy and also evolving (new EU AML rules), and the product team ships often. Good for showing a hybrid recommendation.",
+  "jurisdictions": ["EU", "GLOBAL"],
+  "source_types": {"01_sales_head_interview.txt": "interview", "02_mlro_memo.txt": "policy", "03_platform_team_notes.txt": "meeting notes"},
+  "roles": {"01_sales_head_interview.txt": "Head of sales", "02_mlro_memo.txt": "MLRO", "03_platform_team_notes.txt": "Platform engineering"}
+}

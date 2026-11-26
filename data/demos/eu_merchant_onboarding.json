@@ -1,0 +1,3998 @@
+{
+ "demo_id": "eu_merchant_onboarding",
+ "project": {
+  "name": "EU merchant onboarding (KYB)",
+  "description": "A payments company onboards merchants across the EU. Regulation is heavy and also evolving (new EU AML rules), and the product team ships often. Good for showing a hybrid recommendation.",
+  "jurisdictions": [
+   "EU",
+   "GLOBAL"
+  ]
+ },
+ "documents": [
+  {
+   "title": "01 Sales Head Interview",
+   "source_type": "interview",
+   "role": "Head of sales",
+   "masked_text": "Interview with Lukas Weber (Head of Sales)\n\nWe lose merchants because onboarding takes days. Competitors approve small merchants in under an hour. I want automated approval for low-risk merchants within one hour and a human only for the rest. We release product changes every two weeks and want onboarding to keep up with that pace.\n\nMerchants should upload their company registration and the IDs of the owners from a web portal, and they should be able to see where they are in the process. Sales also needs a dashboard of applications stuck in review.\n",
+   "pii_found": {},
+   "injection": []
+  },
+  {
+   "title": "02 Mlro Memo",
+   "source_type": "policy",
+   "role": "MLRO",
+   "masked_text": "Memo from Elena Costa, MLRO. Subject: Merchant due diligence\n\nEvery merchant must be screened against EU and UN sanctions lists at onboarding and daily afterwards. We must identify every beneficial owner holding more than 25 percent or exercising control, and verify them. Politically exposed persons need MLRO approval before activation. Merchants from high-risk third countries need enhanced due diligence.\n\nAutomated rejection of a merchant must be reviewable by a human on request. All onboarding records are kept for five years after the relationship ends. The new EU AML regulation applies from 2027 and will change several of these rules, so thresholds and checks must be configurable rather than hard-coded. Suspicious activity must be reportable to the financial intelligence unit without alerting the merchant.\n",
+   "pii_found": {},
+   "injection": []
+  },
+  {
+   "title": "03 Platform Team Notes",
+   "source_type": "meeting notes",
+   "role": "Platform engineering",
+   "masked_text": "Platform engineering notes (Sven Larsen)\n\n- We deploy continuously to production with automated tests and security scans. Onboarding should use the same pipeline.\n- Document checks and screening will use external vendors through APIs. Vendor outages must not lose applications.\n- Personal data of beneficial owners is processed under GDPR. A data protection impact assessment is needed because we process identity documents at scale.\n- The service must handle 500 onboarding applications per hour at peak with 99.9 percent availability.\n- Every decision and every access to identity documents must be logged for audit.\n",
+   "pii_found": {},
+   "injection": []
+  }
+ ],
+ "requirements": [
+  {
+   "id": "15708dc2-dd8d-4569-a76d-473fb7c7634c",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-PERF-001",
+   "statement": "The system shall provide automated approval for low-risk merchants within one hour.",
+   "categories": [
+    "functional",
+    "performance",
+    "business"
+   ],
+   "primary_category": "performance",
+   "source_stakeholder": "Lukas Weber (Head of Sales)",
+   "source_document": "01 Sales Head Interview",
+   "source_excerpt": "I want automated approval for low-risk merchants within one hour",
+   "business_justification": "To prevent losing merchants due to slow onboarding times.",
+   "priority": "medium",
+   "dependencies": [],
+   "assumptions": [
+    "There is a defined criteria for what constitutes a 'low-risk' merchant."
+   ],
+   "acceptance_criteria": [
+    "Given a merchant application marked as 'low-risk', When the application is submitted, Then the system shall provide an automated approval decision within 60 minutes.",
+    "Given a merchant application that does not meet 'low-risk' criteria, When the application is submitted, Then the system shall not provide an automated approval within 60 minutes."
+   ],
+   "regulations": [
+    {
+     "regulation": "Illustrative internal policy",
+     "clause_id": "ORG-POL-TAT",
+     "citation": "Illustrative internal policy: Onboarding turnaround and manual review policy (sample)",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "The requirement directly implements the internal policy for straight-through processing turnaround times for low-risk customers.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 5.0,
+    "score": 20.0
+   },
+   "confidence_score": 0.7,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "ambiguity",
+     "detail": "The term 'low-risk' is not defined."
+    },
+    {
+     "kind": "incomplete",
+     "detail": "Missing failure behavior if the one-hour threshold is exceeded."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Definition of low-risk",
+    "What happens if the automated system fails to approve within the hour"
+   ],
+   "history": []
+  },
+  {
+   "id": "3a526dda-9c27-4bab-9c2b-1997bf1ff7b8",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-FR-001",
+   "statement": "The system shall route non-low-risk merchant applications to a human reviewer.",
+   "categories": [
+    "functional",
+    "operational"
+   ],
+   "primary_category": "functional",
+   "source_stakeholder": "Lukas Weber (Head of Sales)",
+   "source_document": "01 Sales Head Interview",
+   "source_excerpt": "and a human only for the rest.",
+   "business_justification": null,
+   "priority": "medium",
+   "dependencies": [],
+   "assumptions": [
+    "There is a manual review process available."
+   ],
+   "acceptance_criteria": [
+    "Given a merchant application that is not classified as 'low-risk', When the application is processed, Then the system shall route the application to the human reviewer queue.",
+    "Given a merchant application in the human reviewer queue, When a reviewer accesses the system, Then the reviewer shall be able to view the application details."
+   ],
+   "regulations": [
+    {
+     "regulation": "GDPR",
+     "clause_id": "GDPR-22",
+     "citation": "GDPR: Automated decision-making (Art. 22)",
+     "jurisdiction": "EU",
+     "confidence": 0.8,
+     "rationale": "Routing non-low-risk applications to human reviewers provides the necessary human intervention safeguard for automated decision-making processes.",
+     "needs_legal_review": true
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 4.0,
+    "score": 16.0
+   },
+   "confidence_score": 0.67,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "undefined_term",
+     "detail": "The term 'non-low-risk' is not defined."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Definition of 'the rest' (non-low-risk merchants)"
+   ],
+   "history": []
+  },
+  {
+   "id": "e83e6162-000f-48f4-b676-8619d2b5cde5",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-OPS-001",
+   "statement": "The system shall support onboarding updates on a two-week release cycle.",
+   "categories": [
+    "operational"
+   ],
+   "primary_category": "operational",
+   "source_stakeholder": "Lukas Weber (Head of Sales)",
+   "source_document": "01 Sales Head Interview",
+   "source_excerpt": "We release product changes every two weeks and want onboarding to keep up with that pace.",
+   "business_justification": "To ensure onboarding capabilities match the pace of product changes.",
+   "priority": "low",
+   "dependencies": [],
+   "assumptions": [
+    "The development and deployment pipeline can support bi-weekly updates."
+   ],
+   "acceptance_criteria": [
+    "Given a planned update to the onboarding process, When the update is ready, Then the system shall support deployment on a cycle of [TBD: 14 days].",
+    "Given the current system state, When a two-week period elapses, Then the system shall be capable of accepting a new release without downtime."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 3.0,
+    "score": 9.0
+   },
+   "confidence_score": 0.53,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Missing specific technical requirements for deployment."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Specific technical requirements for deployment frequency"
+   ],
+   "history": []
+  },
+  {
+   "id": "8ae4e74f-1633-43d7-983a-c7e998c6016a",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-FR-002",
+   "statement": "The system shall provide a web portal for merchants to upload company registration documents.",
+   "categories": [
+    "functional",
+    "usability",
+    "data"
+   ],
+   "primary_category": "functional",
+   "source_stakeholder": "Lukas Weber (Head of Sales)",
+   "source_document": "01 Sales Head Interview",
+   "source_excerpt": "Merchants should upload their company registration",
+   "business_justification": null,
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [
+    "Merchants have access to digital copies of their registration."
+   ],
+   "acceptance_criteria": [
+    "Given a merchant logged into the web portal, When the merchant navigates to the document upload section, Then the system shall provide an interface to upload company registration documents.",
+    "Given a file upload attempt, When the merchant uploads a valid document, Then the system shall confirm receipt of the registration document."
+   ],
+   "regulations": [
+    {
+     "regulation": "EU AML Directive (2015/849 as amended)",
+     "clause_id": "EU-AMLD-CDD",
+     "citation": "EU AML Directive (2015/849 as amended): Customer due diligence and high-risk third countries",
+     "jurisdiction": "EU",
+     "confidence": 0.7,
+     "rationale": "Collecting company registration documents is a fundamental component of the customer due diligence obligation required when establishing a business relationship.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 5.0,
+    "score": 20.0
+   },
+   "confidence_score": 0.68,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Missing technical constraints for file uploads."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Supported file formats",
+    "Maximum file size"
+   ],
+   "history": []
+  },
+  {
+   "id": "4dfa351c-f928-4be5-a7ce-f0269098ef05",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-PRV-001",
+   "statement": "The system shall provide a web portal for merchants to upload IDs of company owners.",
+   "categories": [
+    "functional",
+    "privacy",
+    "data"
+   ],
+   "primary_category": "privacy",
+   "source_stakeholder": "Lukas Weber (Head of Sales)",
+   "source_document": "01 Sales Head Interview",
+   "source_excerpt": "and the IDs of the owners from a web portal",
+   "business_justification": null,
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [
+    "Merchants have access to digital copies of owner IDs."
+   ],
+   "acceptance_criteria": [
+    "Given a merchant logged into the web portal, When the merchant navigates to the owner identity section, Then the system shall provide an interface to upload IDs of company owners.",
+    "Given a file upload attempt, When the merchant uploads an owner ID, Then the system shall store the document associated with the specific owner."
+   ],
+   "regulations": [
+    {
+     "regulation": "EU AML Directive (2015/849 as amended)",
+     "clause_id": "EU-AMLD-UBO",
+     "citation": "EU AML Directive (2015/849 as amended): Beneficial ownership register",
+     "jurisdiction": "EU",
+     "confidence": 0.9,
+     "rationale": "Collecting identification for company owners is required to verify beneficial ownership as mandated by AML regulations.",
+     "needs_legal_review": true
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 5.0,
+    "score": 20.0
+   },
+   "confidence_score": 0.74,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "ambiguity",
+     "detail": "The term 'owners' is not defined (e.g., UBO vs legal owners)."
+    },
+    {
+     "kind": "incomplete",
+     "detail": "Missing file constraints and security requirements."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Definition of 'owners'",
+    "Supported file formats",
+    "Privacy and security requirements for handling sensitive ID documents"
+   ],
+   "history": []
+  },
+  {
+   "id": "8a8455f6-eb8b-4dda-ab72-5bbb5b100c2f",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-UX-001",
+   "statement": "The system shall provide a status tracking feature for merchants to view their application progress.",
+   "categories": [
+    "functional",
+    "usability"
+   ],
+   "primary_category": "usability",
+   "source_stakeholder": "Lukas Weber (Head of Sales)",
+   "source_document": "01 Sales Head Interview",
+   "source_excerpt": "they should be able to see where they are in the process.",
+   "business_justification": null,
+   "priority": "medium",
+   "dependencies": [],
+   "assumptions": [
+    "The process can be broken down into trackable stages."
+   ],
+   "acceptance_criteria": [
+    "Given a merchant with an active application, When the merchant accesses the status tracking feature, Then the system shall display the current stage of the application.",
+    "Given an application status change, When the status is updated in the backend, Then the status tracking feature shall reflect the update for the merchant."
+   ],
+   "regulations": [
+    {
+     "regulation": "GDPR",
+     "clause_id": "GDPR-5",
+     "citation": "GDPR: Principles of processing (Art. 5)",
+     "jurisdiction": "EU",
+     "confidence": 0.6,
+     "rationale": "Providing status tracking supports the principle of transparency in personal data processing by keeping the data subject informed.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "low",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 2.0,
+    "score": 4.0
+   },
+   "confidence_score": 0.52,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "ambiguity",
+     "detail": "The term 'application progress' is not defined."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Granularity of the status updates",
+    "UI/UX design for the status tracker"
+   ],
+   "history": []
+  },
+  {
+   "id": "0a810eee-ac24-4968-a232-25532736c9d0",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-STK-001",
+   "statement": "The system shall provide a dashboard for the Sales team to view applications stuck in review.",
+   "categories": [
+    "functional",
+    "stakeholder"
+   ],
+   "primary_category": "stakeholder",
+   "source_stakeholder": "Lukas Weber (Head of Sales)",
+   "source_document": "01 Sales Head Interview",
+   "source_excerpt": "Sales also needs a dashboard of applications stuck in review.",
+   "business_justification": null,
+   "priority": "medium",
+   "dependencies": [],
+   "assumptions": [
+    "There is a definition for when an application is considered 'stuck'."
+   ],
+   "acceptance_criteria": [
+    "Given an application that meets the definition of 'stuck', When a Sales team member views the dashboard, Then the application shall be visible in the 'stuck in review' list.",
+    "Given an application that is not 'stuck', When a Sales team member views the dashboard, Then the application shall not appear in the 'stuck in review' list."
+   ],
+   "regulations": [
+    {
+     "regulation": "Illustrative internal policy",
+     "clause_id": "ORG-POL-TAT",
+     "citation": "Illustrative internal policy: Onboarding turnaround and manual review policy (sample)",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.8,
+     "rationale": "A dashboard for stuck applications is necessary to ensure compliance with the internal policy requiring manual reviews to be resolved within two business days.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 3.0,
+    "score": 9.0
+   },
+   "confidence_score": 0.62,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "ambiguity",
+     "detail": "The term 'stuck in review' is not defined."
+    },
+    {
+     "kind": "incomplete",
+     "detail": "Missing access control requirements."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Definition of 'stuck in review'",
+    "Access control requirements for the Sales dashboard"
+   ],
+   "history": []
+  },
+  {
+   "id": "da135cba-3339-4f11-b0d8-9672156df2e9",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-REG-001",
+   "statement": "The system shall screen every merchant against EU and UN sanctions lists at onboarding.",
+   "categories": [
+    "regulatory",
+    "security"
+   ],
+   "primary_category": "regulatory",
+   "source_stakeholder": "Elena Costa, MLRO",
+   "source_document": "02 Mlro Memo",
+   "source_excerpt": "Every merchant must be screened against EU and UN sanctions lists at onboarding",
+   "business_justification": null,
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a new merchant application, When the application is submitted, Then the system shall automatically screen the merchant against the EU sanctions list.",
+    "Given a new merchant application, When the application is submitted, Then the system shall automatically screen the merchant against the UN sanctions list."
+   ],
+   "regulations": [
+    {
+     "regulation": "FATF Recommendations",
+     "clause_id": "FATF-R6",
+     "citation": "FATF Recommendations: Targeted financial sanctions (R.6)",
+     "jurisdiction": "GLOBAL",
+     "confidence": 1.0,
+     "rationale": "Screening against sanctions lists is a mandatory requirement under FATF Recommendation 6 for targeted financial sanctions.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.96,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "7512a448-4a40-42c3-9c92-f015fe9f4f96",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-REG-002",
+   "statement": "The system shall screen every merchant against EU and UN sanctions lists daily after onboarding.",
+   "categories": [
+    "regulatory",
+    "security"
+   ],
+   "primary_category": "regulatory",
+   "source_stakeholder": "Elena Costa, MLRO",
+   "source_document": "02 Mlro Memo",
+   "source_excerpt": "and daily afterwards",
+   "business_justification": null,
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given an onboarded merchant, When a daily automated job runs, Then the system shall screen the merchant against the EU sanctions list.",
+    "Given an onboarded merchant, When a daily automated job runs, Then the system shall screen the merchant against the UN sanctions list."
+   ],
+   "regulations": [
+    {
+     "regulation": "FATF Recommendations",
+     "clause_id": "FATF-R6",
+     "citation": "FATF Recommendations: Targeted financial sanctions (R.6)",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Ongoing screening is required to ensure that assets of newly designated persons are frozen without delay as per FATF Recommendation 6.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "72b3e7d0-bd39-41bd-a72b-24cbcca55c99",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-REG-003",
+   "statement": "The system shall identify every beneficial owner holding more than 25 percent or exercising control.",
+   "categories": [
+    "regulatory",
+    "data"
+   ],
+   "primary_category": "regulatory",
+   "source_stakeholder": "Elena Costa, MLRO",
+   "source_document": "02 Mlro Memo",
+   "source_excerpt": "We must identify every beneficial owner holding more than 25 percent or exercising control",
+   "business_justification": null,
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a merchant application, When the ownership structure is provided, Then the system shall identify all beneficial owners holding more than 25 percent.",
+    "Given a merchant application, When the ownership structure is provided, Then the system shall identify all beneficial owners exercising control."
+   ],
+   "regulations": [
+    {
+     "regulation": "EU AML Directive (2015/849 as amended)",
+     "clause_id": "EU-AMLD-UBO",
+     "citation": "EU AML Directive (2015/849 as amended): Beneficial ownership register",
+     "jurisdiction": "EU",
+     "confidence": 1.0,
+     "rationale": "The requirement explicitly mirrors the regulatory definition and identification threshold for beneficial owners.",
+     "needs_legal_review": true
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 5.0,
+    "score": 15.0
+   },
+   "confidence_score": 0.96,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "fb9a27e8-70be-48c3-ba2d-0d696d7fa119",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-REG-004",
+   "statement": "The system shall verify every beneficial owner identified.",
+   "categories": [
+    "regulatory",
+    "security"
+   ],
+   "primary_category": "regulatory",
+   "source_stakeholder": "Elena Costa, MLRO",
+   "source_document": "02 Mlro Memo",
+   "source_excerpt": "and verify them",
+   "business_justification": null,
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a beneficial owner identified by the system, When the verification process is triggered, Then the system shall perform a verification check on that individual."
+   ],
+   "regulations": [
+    {
+     "regulation": "FATF Recommendations",
+     "clause_id": "FATF-R10",
+     "citation": "FATF Recommendations: Customer due diligence (R.10)",
+     "jurisdiction": "GLOBAL",
+     "confidence": 1.0,
+     "rationale": "FATF Recommendation 10 mandates that institutions must verify the identity of beneficial owners using reliable independent sources.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 5.0,
+    "score": 15.0
+   },
+   "confidence_score": 0.96,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "288e30fa-7f2c-4d7b-8325-df53fa396708",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-REG-005",
+   "statement": "The system shall require MLRO approval for Politically Exposed Persons before activation.",
+   "categories": [
+    "regulatory",
+    "security"
+   ],
+   "primary_category": "regulatory",
+   "source_stakeholder": "Elena Costa, MLRO",
+   "source_document": "02 Mlro Memo",
+   "source_excerpt": "Politically exposed persons need MLRO approval before activation.",
+   "business_justification": null,
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a merchant identified as a Politically Exposed Person (PEP), When the application reaches the activation stage, Then the system shall block activation until MLRO approval is recorded."
+   ],
+   "regulations": [
+    {
+     "regulation": "FATF Recommendations",
+     "clause_id": "FATF-R12",
+     "citation": "FATF Recommendations: Politically exposed persons (R.12)",
+     "jurisdiction": "GLOBAL",
+     "confidence": 1.0,
+     "rationale": "FATF Recommendation 12 requires senior management approval (such as an MLRO) for establishing relationships with PEPs.",
+     "needs_legal_review": true
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 5.0,
+    "score": 20.0
+   },
+   "confidence_score": 0.73,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "undefined_term",
+     "detail": "PEP definition is not provided."
+    },
+    {
+     "kind": "incomplete",
+     "detail": "Missing mechanism for MLRO approval."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "definition of Politically exposed persons",
+    "mechanism for MLRO approval"
+   ],
+   "history": []
+  },
+  {
+   "id": "be1db42e-7366-4063-bf63-5df6a5bd153f",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-REG-006",
+   "statement": "The system shall perform enhanced due diligence for merchants from high-risk third countries.",
+   "categories": [
+    "regulatory",
+    "security"
+   ],
+   "primary_category": "regulatory",
+   "source_stakeholder": "Elena Costa, MLRO",
+   "source_document": "02 Mlro Memo",
+   "source_excerpt": "Merchants from high-risk third countries need enhanced due diligence.",
+   "business_justification": null,
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a merchant from a high-risk third country, When the application is processed, Then the system shall trigger the enhanced due diligence workflow."
+   ],
+   "regulations": [
+    {
+     "regulation": "EU AML Directive (2015/849 as amended)",
+     "clause_id": "EU-AMLD-CDD",
+     "citation": "EU AML Directive (2015/849 as amended): Customer due diligence and high-risk third countries",
+     "jurisdiction": "EU",
+     "confidence": 1.0,
+     "rationale": "The clause explicitly mandates the application of enhanced due diligence for business relationships involving high-risk third countries.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 4.0,
+    "impact": 5.0,
+    "score": 20.0
+   },
+   "confidence_score": 0.73,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "undefined_term",
+     "detail": "High-risk third countries list is not specified."
+    },
+    {
+     "kind": "incomplete",
+     "detail": "Missing specific steps for EDD."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "definition of high-risk third countries",
+    "specific steps for enhanced due diligence"
+   ],
+   "history": []
+  },
+  {
+   "id": "dfabcfd0-96d2-4c03-9f3a-1fbd77da66d0",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-UX-002",
+   "statement": "The system shall allow a human to review an automated rejection of a merchant upon request.",
+   "categories": [
+    "functional",
+    "usability"
+   ],
+   "primary_category": "usability",
+   "source_stakeholder": "Elena Costa, MLRO",
+   "source_document": "02 Mlro Memo",
+   "source_excerpt": "Automated rejection of a merchant must be reviewable by a human on request.",
+   "business_justification": null,
+   "priority": "medium",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given an automated rejection of a merchant, When the merchant or internal user requests a review, Then the system shall allow a human to initiate a manual review of the decision."
+   ],
+   "regulations": [
+    {
+     "regulation": "GDPR",
+     "clause_id": "GDPR-22",
+     "citation": "GDPR: Automated decision-making (Art. 22)",
+     "jurisdiction": "EU",
+     "confidence": 0.9,
+     "rationale": "Providing a mechanism to contest an automated rejection is a core requirement of the right to human intervention under GDPR Article 22.",
+     "needs_legal_review": true
+    }
+   ],
+   "risk_level": "low",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 3.0,
+    "score": 6.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "0c1bbe23-8025-4fdf-808d-72ef1589352f",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-REG-007",
+   "statement": "The system shall retain all onboarding records for five years after the relationship ends.",
+   "categories": [
+    "regulatory",
+    "data"
+   ],
+   "primary_category": "regulatory",
+   "source_stakeholder": "Elena Costa, MLRO",
+   "source_document": "02 Mlro Memo",
+   "source_excerpt": "All onboarding records are kept for five years after the relationship ends.",
+   "business_justification": null,
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a merchant relationship that has ended, When the retention period of 5 years passes, Then the system shall be capable of purging the records.",
+    "Given a merchant relationship, When the relationship is active, Then the system shall retain all onboarding records."
+   ],
+   "regulations": [
+    {
+     "regulation": "FATF Recommendations",
+     "clause_id": "FATF-R11",
+     "citation": "FATF Recommendations: Record keeping (R.11)",
+     "jurisdiction": "GLOBAL",
+     "confidence": 1.0,
+     "rationale": "FATF Recommendation 11 requires that customer due diligence records be kept for at least five years after the relationship ends.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 4.0,
+    "score": 8.0
+   },
+   "confidence_score": 0.96,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "72a6e808-c25c-41e1-855e-42f51d5fda8b",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-FR-003",
+   "statement": "The system shall make thresholds and checks configurable.",
+   "categories": [
+    "functional",
+    "operational"
+   ],
+   "primary_category": "functional",
+   "source_stakeholder": "Elena Costa, MLRO",
+   "source_document": "02 Mlro Memo",
+   "source_excerpt": "thresholds and checks must be configurable rather than hard-coded.",
+   "business_justification": "The new EU AML regulation applies from 2027 and will change several of these rules",
+   "priority": "medium",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given an administrative user with appropriate permissions, When the user accesses the configuration panel, Then the user shall be able to modify screening thresholds.",
+    "Given an administrative user with appropriate permissions, When the user accesses the configuration panel, Then the user shall be able to modify check parameters."
+   ],
+   "regulations": [
+    {
+     "regulation": "EU AML Regulation (2024/1624)",
+     "clause_id": "EU-AMLR",
+     "citation": "EU AML Regulation (2024/1624): Single EU AML rulebook (applies from 2027)",
+     "jurisdiction": "EU",
+     "confidence": 0.8,
+     "rationale": "The regulation explicitly requires that due diligence rules be designed as configurable rather than hard-coded.",
+     "needs_legal_review": true
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 3.0,
+    "score": 9.0
+   },
+   "confidence_score": 0.62,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Missing scope of what can be configured."
+    }
+   ],
+   "is_weak": true,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "a8ca8f33-589c-457a-9f32-520cd0452c7d",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-REG-008",
+   "statement": "The system shall allow reporting of suspicious activity to the financial intelligence unit without alerting the merchant.",
+   "categories": [
+    "regulatory",
+    "security"
+   ],
+   "primary_category": "regulatory",
+   "source_stakeholder": "Elena Costa, MLRO",
+   "source_document": "02 Mlro Memo",
+   "source_excerpt": "Suspicious activity must be reportable to the financial intelligence unit without alerting the merchant.",
+   "business_justification": null,
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a suspicious activity event, When the reporting function is triggered, Then the system shall send the report to the financial intelligence unit.",
+    "Given a suspicious activity report, When the report is sent, Then the system shall ensure no notification or alert is sent to the merchant."
+   ],
+   "regulations": [
+    {
+     "regulation": "FATF Recommendations",
+     "clause_id": "FATF-R20",
+     "citation": "FATF Recommendations: Reporting of suspicious transactions (R.20)",
+     "jurisdiction": "GLOBAL",
+     "confidence": 1.0,
+     "rationale": "The prohibition against tipping off the customer when reporting suspicious activity is a mandatory requirement of FATF Recommendation 20.",
+     "needs_legal_review": true
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 5.0,
+    "score": 15.0
+   },
+   "confidence_score": 0.73,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Missing reporting mechanism."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "mechanism for reporting to the financial intelligence unit"
+   ],
+   "history": []
+  },
+  {
+   "id": "69aed858-f69f-4676-8533-63733a2f351a",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-OPS-002",
+   "statement": "The system shall use the existing continuous deployment pipeline for onboarding.",
+   "categories": [
+    "operational"
+   ],
+   "primary_category": "operational",
+   "source_stakeholder": "Sven Larsen, Platform engineering",
+   "source_document": "03 Platform Team Notes",
+   "source_excerpt": "Onboarding should use the same pipeline.",
+   "business_justification": "Consistency with existing production deployment processes.",
+   "priority": "low",
+   "dependencies": [],
+   "assumptions": [
+    "The existing pipeline is compatible with onboarding requirements."
+   ],
+   "acceptance_criteria": [
+    "Given the existing continuous deployment pipeline, When an onboarding update is pushed, Then the system shall utilize the existing pipeline for deployment."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 3.0,
+    "score": 9.0
+   },
+   "confidence_score": 0.49,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Missing details on pipeline compatibility."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Specifics of the existing pipeline configuration."
+   ],
+   "history": []
+  },
+  {
+   "id": "91d4b88a-896e-4a32-b687-d53eb3ed2822",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-INT-001",
+   "statement": "The system shall integrate with external vendors via APIs for document checks and screening.",
+   "categories": [
+    "integration",
+    "functional"
+   ],
+   "primary_category": "integration",
+   "source_stakeholder": "Sven Larsen, Platform engineering",
+   "source_document": "03 Platform Team Notes",
+   "source_excerpt": "Document checks and screening will use external vendors through APIs.",
+   "business_justification": null,
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [
+    "External vendors provide suitable APIs."
+   ],
+   "acceptance_criteria": [
+    "Given a document check requirement, When the system processes the document, Then the system shall call the external vendor API.",
+    "Given a screening requirement, When the system processes the merchant, Then the system shall call the external vendor API."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 4.0,
+    "score": 12.0
+   },
+   "confidence_score": 0.53,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Missing vendor identification."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Which specific vendors are to be used."
+   ],
+   "history": []
+  },
+  {
+   "id": "77a99c90-5af6-4f4c-ba59-f89720937d8f",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-AVL-001",
+   "statement": "The system shall ensure that vendor outages do not result in the loss of applications.",
+   "categories": [
+    "availability",
+    "integration"
+   ],
+   "primary_category": "availability",
+   "source_stakeholder": "Sven Larsen, Platform engineering",
+   "source_document": "03 Platform Team Notes",
+   "source_excerpt": "Vendor outages must not lose applications.",
+   "business_justification": "Prevent data loss during external service downtime.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [
+    "The system has a mechanism to queue or retry requests."
+   ],
+   "acceptance_criteria": [
+    "Given a vendor outage, When an application is being processed, Then the system shall queue the request for retry.",
+    "Given a vendor outage, When the vendor service is restored, Then the system shall process the queued applications."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 4.0,
+    "score": 12.0
+   },
+   "confidence_score": 0.53,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "ambiguity",
+     "detail": "The term 'loss of applications' is not defined."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Definition of 'lose applications' (e.g., persistence requirements, retry logic)."
+   ],
+   "history": []
+  },
+  {
+   "id": "7a046f56-e429-41f3-b91b-95224264e599",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-PRV-002",
+   "statement": "The system shall process personal data of beneficial owners in compliance with GDPR.",
+   "categories": [
+    "privacy",
+    "regulatory"
+   ],
+   "primary_category": "privacy",
+   "source_stakeholder": "Sven Larsen, Platform engineering",
+   "source_document": "03 Platform Team Notes",
+   "source_excerpt": "Personal data of beneficial owners is processed under GDPR.",
+   "business_justification": "Legal compliance.",
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [
+    "The system architecture supports GDPR requirements."
+   ],
+   "acceptance_criteria": [
+    "Given personal data of a beneficial owner, When the data is processed, Then the system shall apply GDPR-compliant handling procedures."
+   ],
+   "regulations": [
+    {
+     "regulation": "GDPR",
+     "clause_id": "GDPR-5",
+     "citation": "GDPR: Principles of processing (Art. 5)",
+     "jurisdiction": "EU",
+     "confidence": 0.9,
+     "rationale": "Processing personal data in compliance with GDPR is a foundational requirement for all data controllers under the principles of Article 5.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 5.0,
+    "score": 15.0
+   },
+   "confidence_score": 0.7,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Missing specific technical controls."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Specific technical controls for GDPR compliance."
+   ],
+   "history": []
+  },
+  {
+   "id": "3187b759-1487-4a1c-95cc-d7521db5dca8",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-PRV-003",
+   "statement": "The system shall undergo a data protection impact assessment.",
+   "categories": [
+    "privacy",
+    "regulatory"
+   ],
+   "primary_category": "privacy",
+   "source_stakeholder": "Sven Larsen, Platform engineering",
+   "source_document": "03 Platform Team Notes",
+   "source_excerpt": "A data protection impact assessment is needed because we process identity documents at scale.",
+   "business_justification": "Processing identity documents at scale.",
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [
+    "The assessment will be completed before full deployment."
+   ],
+   "acceptance_criteria": [
+    "Given the system deployment plan, When the pre-deployment phase is reached, Then a data protection impact assessment shall be completed and documented."
+   ],
+   "regulations": [
+    {
+     "regulation": "GDPR",
+     "clause_id": "GDPR-35",
+     "citation": "GDPR: Data protection impact assessment (Art. 35)",
+     "jurisdiction": "EU",
+     "confidence": 1.0,
+     "rationale": "A Data Protection Impact Assessment is mandatory under GDPR Article 35 for processing that involves systematic profiling or high-risk data.",
+     "needs_legal_review": true
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 4.0,
+    "score": 12.0
+   },
+   "confidence_score": 0.77,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Missing timeline for assessment."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Timeline for the assessment."
+   ],
+   "history": []
+  },
+  {
+   "id": "052b66b2-de42-4ada-bdaa-bf4b07fb9103",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-PERF-002",
+   "statement": "The system shall handle 500 onboarding applications per hour at peak.",
+   "categories": [
+    "performance"
+   ],
+   "primary_category": "performance",
+   "source_stakeholder": "Sven Larsen, Platform engineering",
+   "source_document": "03 Platform Team Notes",
+   "source_excerpt": "The service must handle 500 onboarding applications per hour at peak",
+   "business_justification": null,
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [
+    "Peak load is defined as 500 applications per hour."
+   ],
+   "acceptance_criteria": [
+    "Given a peak load of 500 applications per hour, When the system is under test, Then the system shall process all 500 applications without failure."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 3.0,
+    "score": 9.0
+   },
+   "confidence_score": 0.53,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "ambiguity",
+     "detail": "The term 'peak' is not defined."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Definition of 'peak' duration."
+   ],
+   "history": []
+  },
+  {
+   "id": "359dc837-9af4-4c27-954c-114e6790f583",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-AVL-002",
+   "statement": "The system shall maintain 99.9 percent availability.",
+   "categories": [
+    "availability"
+   ],
+   "primary_category": "availability",
+   "source_stakeholder": "Sven Larsen, Platform engineering",
+   "source_document": "03 Platform Team Notes",
+   "source_excerpt": "with 99.9 percent availability.",
+   "business_justification": null,
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [
+    "Availability is measured over a standard period."
+   ],
+   "acceptance_criteria": [
+    "Given the system operation, When measured over [TBD: time period], Then the system shall maintain 99.9 percent availability."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 3.0,
+    "score": 9.0
+   },
+   "confidence_score": 0.53,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Missing measurement period."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Measurement period for availability."
+   ],
+   "history": []
+  },
+  {
+   "id": "7d4688e3-1821-462c-97d0-6acc1537bc9c",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-AUD-001",
+   "statement": "The system shall log every decision made.",
+   "categories": [
+    "audit",
+    "regulatory"
+   ],
+   "primary_category": "audit",
+   "source_stakeholder": "Sven Larsen, Platform engineering",
+   "source_document": "03 Platform Team Notes",
+   "source_excerpt": "Every decision and every access to identity documents must be logged for audit.",
+   "business_justification": "Audit requirements.",
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [
+    "Logs are stored in a secure and immutable manner."
+   ],
+   "acceptance_criteria": [
+    "Given a decision made by the system or a human, When the decision is finalized, Then the system shall log the decision in a secure and immutable manner."
+   ],
+   "regulations": [
+    {
+     "regulation": "FATF Recommendations",
+     "clause_id": "FATF-R11",
+     "citation": "FATF Recommendations: Record keeping (R.11)",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.8,
+     "rationale": "Logging decisions is necessary to satisfy the record-keeping requirement to reconstruct transactions and demonstrate compliance to authorities.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 4.0,
+    "score": 12.0
+   },
+   "confidence_score": 0.67,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Missing retention and format requirements."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Log retention period and format."
+   ],
+   "history": []
+  },
+  {
+   "id": "48d2e64f-45f1-42c4-a76b-24f6fbc5a0eb",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-AUD-002",
+   "statement": "The system shall log every access to identity documents.",
+   "categories": [
+    "audit",
+    "security",
+    "privacy"
+   ],
+   "primary_category": "audit",
+   "source_stakeholder": "Sven Larsen, Platform engineering",
+   "source_document": "03 Platform Team Notes",
+   "source_excerpt": "Every decision and every access to identity documents must be logged for audit.",
+   "business_justification": "Audit requirements.",
+   "priority": "critical",
+   "dependencies": [],
+   "assumptions": [
+    "Logs are stored in a secure and immutable manner."
+   ],
+   "acceptance_criteria": [
+    "Given an access event to an identity document, When the document is accessed, Then the system shall log the access event in a secure and immutable manner."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 4.0,
+    "score": 12.0
+   },
+   "confidence_score": 0.58,
+   "approval_status": "pending",
+   "origin": "stated",
+   "derived_reason": "",
+   "quality_flags": [
+    {
+     "kind": "incomplete",
+     "detail": "Missing retention and format requirements."
+    }
+   ],
+   "is_weak": true,
+   "hints": [
+    "Log retention period and format."
+   ],
+   "history": []
+  },
+  {
+   "id": "22f88042-f393-49bf-b565-96f2b9fd885c",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-PRV-004",
+   "statement": "The system shall present a clear privacy notice and capture the customer's recorded consent, with timestamp and purpose, before collecting identity data or biometrics.",
+   "categories": [
+    "privacy",
+    "regulatory"
+   ],
+   "primary_category": "privacy",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by GDPR.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a new customer, When the customer is about to provide identity data, Then the system shall present a privacy notice.",
+    "Given a privacy notice, When the customer provides consent, Then the system shall record the timestamp and the purpose of data collection."
+   ],
+   "regulations": [
+    {
+     "regulation": "GDPR",
+     "clause_id": "GDPR-6-9",
+     "citation": "GDPR: Lawful basis and special-category data (Art. 6 and 9)",
+     "jurisdiction": "EU",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": true
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-CONSENT] Mandatory control with no covering requirement: Notice and consent for personal data.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "a5189a02-10e9-4b74-aa1a-f94d17f83094",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-SEC-001",
+   "statement": "The system shall perform liveness detection and face matching against the identity document for remote onboarding and reject presentation attacks.",
+   "categories": [
+    "security",
+    "functional"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by ISO/IEC 30107-3, NIST SP 800-63A.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a remote onboarding session, When the user provides a selfie and document, Then the system shall perform liveness detection and face matching.",
+    "Given a presentation attack, When the system performs liveness detection, Then the system shall reject the application."
+   ],
+   "regulations": [
+    {
+     "regulation": "ISO/IEC 30107-3",
+     "clause_id": "ISO-30107",
+     "citation": "ISO/IEC 30107-3: Biometric presentation attack detection",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "NIST SP 800-63A",
+     "clause_id": "NIST-800-63A",
+     "citation": "NIST SP 800-63A: Identity proofing assurance levels",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 5.0,
+    "score": 15.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-LIVENESS] Mandatory control with no covering requirement: Biometric liveness and presentation-attack detection.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "116846f4-3e12-4a07-b0a9-da19e2094b02",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-SEC-002",
+   "statement": "The system shall encrypt KYC data in transit and at rest and mask identifiers such as Aadhaar and PAN wherever they are displayed or logged.",
+   "categories": [
+    "security",
+    "privacy"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by GDPR, ISO/IEC 27001:2022.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given KYC data, When the data is in transit or at rest, Then the system shall encrypt the data.",
+    "Given a display or log of Aadhaar or PAN identifiers, When the data is rendered, Then the system shall mask the identifiers."
+   ],
+   "regulations": [
+    {
+     "regulation": "GDPR",
+     "clause_id": "GDPR-25-32",
+     "citation": "GDPR: Privacy by design and security of processing (Art. 25 and 32)",
+     "jurisdiction": "EU",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "ISO/IEC 27001:2022",
+     "clause_id": "ISO-27001",
+     "citation": "ISO/IEC 27001:2022: Information security management controls",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-ENCRYPT] Mandatory control with no covering requirement: Encryption and masking of KYC data.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "8127f46b-b064-4ecd-a931-7789354648c7",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-SEC-003",
+   "statement": "The system shall restrict access to KYC records by role on a least-privilege basis and log every access to full identity documents.",
+   "categories": [
+    "security"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by GDPR, ISO/IEC 27001:2022, OWASP ASVS 4.0.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a user role, When the user attempts to access KYC records, Then the system shall restrict access based on the least-privilege principle.",
+    "Given an access event to a full identity document, When the document is accessed, Then the system shall log the event."
+   ],
+   "regulations": [
+    {
+     "regulation": "ISO/IEC 27001:2022",
+     "clause_id": "ISO-27001",
+     "citation": "ISO/IEC 27001:2022: Information security management controls",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "OWASP ASVS 4.0",
+     "clause_id": "OWASP-ASVS",
+     "citation": "OWASP ASVS 4.0: Application security verification",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "GDPR",
+     "clause_id": "GDPR-25-32",
+     "citation": "GDPR: Privacy by design and security of processing (Art. 25 and 32)",
+     "jurisdiction": "EU",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 4.0,
+    "score": 12.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-ACCESS] Mandatory control with no covering requirement: Role-based access to KYC data.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "bef13742-1d07-4f6a-ac1a-7d04ddd24d8d",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-SEC-004",
+   "statement": "The system shall detect personal-data incidents and support notifying the regulator and affected customers within the legal deadline.",
+   "categories": [
+    "security",
+    "privacy",
+    "operational"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by GDPR.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a personal-data incident, When the incident is detected, Then the system shall trigger the notification process for the regulator and affected customers within the legal deadline."
+   ],
+   "regulations": [
+    {
+     "regulation": "GDPR",
+     "clause_id": "GDPR-33",
+     "citation": "GDPR: Breach notification (Art. 33-34)",
+     "jurisdiction": "EU",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 5.0,
+    "score": 15.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-BREACH] Mandatory control with no covering requirement: Breach detection and notification.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "8b58a3a8-2300-43d4-bae8-b5cf9d1b63ae",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-PRV-005",
+   "statement": "The system shall let customers request access, correction or erasure of their data and shall record where retention law overrides erasure.",
+   "categories": [
+    "privacy",
+    "regulatory"
+   ],
+   "primary_category": "privacy",
+   "source_stakeholder": "System (mandatory control catalogue)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Required by GDPR.",
+   "priority": "high",
+   "dependencies": [],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a customer request, When the customer asks for access, correction, or erasure of their data, Then the system shall fulfill the request or record the legal retention override."
+   ],
+   "regulations": [
+    {
+     "regulation": "GDPR",
+     "clause_id": "GDPR-17",
+     "citation": "GDPR: Right to erasure (Art. 17)",
+     "jurisdiction": "EU",
+     "confidence": 0.9,
+     "rationale": "Derived from the mandatory-control catalogue.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 4.0,
+    "score": 8.0
+   },
+   "confidence_score": 0.93,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "[C-RIGHTS] Mandatory control with no covering requirement: Data-subject rights handling.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "c0e81b8a-7de0-4e5f-94c8-3b43e964637d",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-SEC-005",
+   "statement": "The system shall implement automated integrity checks for all uploaded identity documents to detect tampering or digital manipulation.",
+   "categories": [
+    "security"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (security/privacy analysis)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Since the system relies on uploaded documents for KYC, it must ensure the authenticity of the files provided by the merchant.",
+   "priority": "high",
+   "dependencies": [
+    "KYC-PRV-001"
+   ],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given an uploaded identity document, When the document is received, Then the system shall perform an automated integrity check to detect tampering or manipulation."
+   ],
+   "regulations": [
+    {
+     "regulation": "NIST SP 800-63A",
+     "clause_id": "NIST-800-63A",
+     "citation": "NIST SP 800-63A: Identity proofing assurance levels",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "The requirement directly supports the NIST obligation to detect forged or tampered documents during identity proofing.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "GDPR",
+     "clause_id": "GDPR-25-32",
+     "citation": "GDPR: Privacy by design and security of processing (Art. 25 and 32)",
+     "jurisdiction": "EU",
+     "confidence": 0.7,
+     "rationale": "Automated integrity checks constitute a technical measure to ensure the security and resilience of personal data processing.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 5.0,
+    "score": 15.0
+   },
+   "confidence_score": 0.9,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "Since the system relies on uploaded documents for KYC, it must ensure the authenticity of the files provided by the merchant.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "d600f138-ca79-4595-8cbc-066dbfa728b1",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-SEC-006",
+   "statement": "The system shall enforce secure, time-limited access tokens for all API integrations with external document verification vendors.",
+   "categories": [
+    "security"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (security/privacy analysis)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Integration with third-party vendors requires secure communication channels to prevent unauthorized access to sensitive PII.",
+   "priority": "high",
+   "dependencies": [
+    "KYC-INT-001"
+   ],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given an API integration with a vendor, When the system makes a request, Then the system shall use a secure, time-limited access token."
+   ],
+   "regulations": [
+    {
+     "regulation": "OWASP ASVS 4.0",
+     "clause_id": "OWASP-ASVS",
+     "citation": "OWASP ASVS 4.0: Application security verification",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "The requirement addresses specific API security and session management obligations defined in the ASVS standard.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "GDPR",
+     "clause_id": "GDPR-25-32",
+     "citation": "GDPR: Privacy by design and security of processing (Art. 25 and 32)",
+     "jurisdiction": "EU",
+     "confidence": 0.7,
+     "rationale": "Time-limited tokens are a technical measure to ensure the confidentiality and security of processing.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 4.0,
+    "score": 12.0
+   },
+   "confidence_score": 0.9,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "Integration with third-party vendors requires secure communication channels to prevent unauthorized access to sensitive PII.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "484e117c-f941-40c8-8af0-f420a6e3c112",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-SEC-007",
+   "statement": "The system shall implement automated scanning of all uploaded documents for malware or malicious scripts.",
+   "categories": [
+    "security"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (security/privacy analysis)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Allowing file uploads from external users creates an attack vector for injecting malicious content into the internal environment.",
+   "priority": "high",
+   "dependencies": [
+    "KYC-FR-002"
+   ],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given an uploaded document, When the document is received, Then the system shall perform an automated scan for malware or malicious scripts."
+   ],
+   "regulations": [
+    {
+     "regulation": "ISO/IEC 27001:2022",
+     "clause_id": "ISO-27001",
+     "citation": "ISO/IEC 27001:2022: Information security management controls",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.8,
+     "rationale": "Malware scanning is a standard control for information security management and incident prevention.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 5.0,
+    "score": 15.0
+   },
+   "confidence_score": 0.9,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "Allowing file uploads from external users creates an attack vector for injecting malicious content into the internal environment.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "c275c257-4dad-4a47-99f2-046fee424cc0",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-SEC-008",
+   "statement": "The system shall perform automated validation of the configuration changes made to screening thresholds to prevent unauthorized or erroneous modifications.",
+   "categories": [
+    "security"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (security/privacy analysis)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Configurable thresholds directly impact regulatory compliance; unauthorized changes could lead to systemic failure in screening.",
+   "priority": "high",
+   "dependencies": [
+    "KYC-FR-003"
+   ],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a configuration change to screening thresholds, When the change is submitted, Then the system shall perform automated validation to prevent unauthorized or erroneous modifications."
+   ],
+   "regulations": [
+    {
+     "regulation": "ISO/IEC 27001:2022",
+     "clause_id": "ISO-27001",
+     "citation": "ISO/IEC 27001:2022: Information security management controls",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.8,
+     "rationale": "Validating configuration changes is a core component of access management and secure development controls.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "GDPR",
+     "clause_id": "GDPR-25-32",
+     "citation": "GDPR: Privacy by design and security of processing (Art. 25 and 32)",
+     "jurisdiction": "EU",
+     "confidence": 0.7,
+     "rationale": "Preventing unauthorized modifications to screening thresholds is a technical measure to ensure the integrity and security of processing.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 5.0,
+    "score": 15.0
+   },
+   "confidence_score": 0.89,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "Configurable thresholds directly impact regulatory compliance; unauthorized changes could lead to systemic failure in screening.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "ad93d079-061d-4e42-b795-eb7519b0aaea",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-SEC-009",
+   "statement": "The system shall implement an automated purge process to permanently delete data after the five-year retention period expires, unless a legal hold is active.",
+   "categories": [
+    "security",
+    "privacy"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (security/privacy analysis)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Retention requirements imply a corresponding need for secure disposal to maintain GDPR compliance and minimize data liability.",
+   "priority": "high",
+   "dependencies": [
+    "KYC-REG-007"
+   ],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given data that has exceeded the five-year retention period, When no legal hold is active, Then the system shall permanently delete the data."
+   ],
+   "regulations": [
+    {
+     "regulation": "FATF Recommendations",
+     "clause_id": "FATF-R11",
+     "citation": "FATF Recommendations: Record keeping (R.11)",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "The requirement aligns with the obligation to retain records for at least five years and implies the necessity of managing the lifecycle of that data.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "GDPR",
+     "clause_id": "GDPR-5",
+     "citation": "GDPR: Principles of processing (Art. 5)",
+     "jurisdiction": "EU",
+     "confidence": 0.8,
+     "rationale": "The requirement enforces the storage limitation principle by ensuring data is not kept longer than necessary.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "low",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 3.0,
+    "score": 6.0
+   },
+   "confidence_score": 0.92,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "Retention requirements imply a corresponding need for secure disposal to maintain GDPR compliance and minimize data liability.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "a33175f5-4245-40e1-a563-4d3e38574248",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-SEC-010",
+   "statement": "The system shall implement multi-factor authentication for all internal users accessing the dashboard and review portals.",
+   "categories": [
+    "security"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (security/privacy analysis)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Access to sensitive KYC data and decision-making tools requires stronger authentication than simple passwords to prevent unauthorized access.",
+   "priority": "high",
+   "dependencies": [
+    "KYC-STK-001"
+   ],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given an internal user accessing the dashboard or review portal, When the user attempts to log in, Then the system shall enforce multi-factor authentication."
+   ],
+   "regulations": [
+    {
+     "regulation": "OWASP ASVS 4.0",
+     "clause_id": "OWASP-ASVS",
+     "citation": "OWASP ASVS 4.0: Application security verification",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.9,
+     "rationale": "Multi-factor authentication is a primary requirement for secure authentication and access control under ASVS.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "ISO/IEC 27001:2022",
+     "clause_id": "ISO-27001",
+     "citation": "ISO/IEC 27001:2022: Information security management controls",
+     "jurisdiction": "GLOBAL",
+     "confidence": 0.8,
+     "rationale": "MFA is a standard technical control for access management within an information security management system.",
+     "needs_legal_review": false
+    }
+   ],
+   "risk_level": "high",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 5.0,
+    "score": 15.0
+   },
+   "confidence_score": 0.92,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "Access to sensitive KYC data and decision-making tools requires stronger authentication than simple passwords to prevent unauthorized access.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "8a1e2268-d7d0-4879-a780-2eb34c633f91",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-SEC-011",
+   "statement": "The system shall maintain a cryptographically signed audit trail for all automated and manual KYC decisions.",
+   "categories": [
+    "security"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (security/privacy analysis)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "To ensure non-repudiation of regulatory decisions, the audit logs must be protected against tampering.",
+   "priority": "high",
+   "dependencies": [
+    "KYC-AUD-001"
+   ],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given a KYC decision, When the decision is made, Then the system shall generate and maintain a cryptographically signed audit trail."
+   ],
+   "regulations": [
+    {
+     "regulation": "GDPR",
+     "clause_id": "GDPR-5",
+     "citation": "GDPR: Principles of processing (Art. 5)",
+     "jurisdiction": "EU",
+     "confidence": 0.8,
+     "rationale": "An audit trail is necessary for the controller to demonstrate compliance with data processing principles.",
+     "needs_legal_review": false
+    },
+    {
+     "regulation": "GDPR",
+     "clause_id": "GDPR-22",
+     "citation": "GDPR: Automated decision-making (Art. 22)",
+     "jurisdiction": "EU",
+     "confidence": 0.7,
+     "rationale": "Audit trails are essential to provide the transparency required to contest automated decisions.",
+     "needs_legal_review": true
+    }
+   ],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 2.0,
+    "impact": 5.0,
+    "score": 10.0
+   },
+   "confidence_score": 0.89,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "To ensure non-repudiation of regulatory decisions, the audit logs must be protected against tampering.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  },
+  {
+   "id": "8bc46029-8a5d-48e2-aec2-90e72a30162f",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "ref": "KYC-SEC-012",
+   "statement": "The system shall implement rate limiting on the merchant web portal to prevent brute-force attacks on document upload endpoints.",
+   "categories": [
+    "security"
+   ],
+   "primary_category": "security",
+   "source_stakeholder": "System (security/privacy analysis)",
+   "source_document": "",
+   "source_excerpt": "",
+   "business_justification": "Public-facing portals are susceptible to automated attacks that could lead to DoS or unauthorized data harvesting.",
+   "priority": "high",
+   "dependencies": [
+    "KYC-FR-002"
+   ],
+   "assumptions": [],
+   "acceptance_criteria": [
+    "Given the merchant web portal, When a user attempts to upload documents, Then the system shall enforce rate limiting to prevent brute-force attacks."
+   ],
+   "regulations": [],
+   "risk_level": "medium",
+   "risk_scores": {
+    "likelihood": 3.0,
+    "impact": 3.0,
+    "score": 9.0
+   },
+   "confidence_score": 0.81,
+   "approval_status": "pending",
+   "origin": "derived",
+   "derived_reason": "Public-facing portals are susceptible to automated attacks that could lead to DoS or unauthorized data harvesting.",
+   "quality_flags": [],
+   "is_weak": false,
+   "hints": [],
+   "history": []
+  }
+ ],
+ "questions": [
+  {
+   "id": "80baed24-6a6a-497c-b692-960065d54d77",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "15708dc2-dd8d-4569-a76d-473fb7c7634c",
+   "question": "What specific risk-scoring model or criteria defines a 'low-risk' merchant?",
+   "why": "Resolves ambiguity of 'low-risk'.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "6d628af9-def7-4bc1-9624-0c32148869cc",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "15708dc2-dd8d-4569-a76d-473fb7c7634c",
+   "question": "What is the required system behavior if the automated approval process exceeds the one-hour threshold?",
+   "why": "Resolves incomplete failure handling.",
+   "options": [
+    "Escalate to human queue",
+    "Notify system administrator",
+    "Auto-retry with higher priority"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "82610a56-dd7b-4a08-ac63-02111541a0b7",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "3a526dda-9c27-4bab-9c2b-1997bf1ff7b8",
+   "question": "How is a 'non-low-risk' merchant formally categorized for routing purposes?",
+   "why": "Resolves undefined term.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "9d4ce4aa-5288-400e-b8ff-de04c75857f4",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "e83e6162-000f-48f4-b676-8619d2b5cde5",
+   "question": "Are there specific downtime constraints or zero-downtime requirements for these bi-weekly updates?",
+   "why": "Resolves incomplete technical requirements.",
+   "options": [
+    "Zero-downtime required",
+    "Maintenance window allowed"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "3c7090f4-f47e-45e5-ab3d-8f02128d4db5",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "8ae4e74f-1633-43d7-983a-c7e998c6016a",
+   "question": "What are the allowed file formats for registration documents?",
+   "why": "Resolves incomplete technical constraints.",
+   "options": [
+    "PDF, JPG, PNG",
+    "PDF only"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "b9e6369b-594b-47c9-9f09-17e5a1c5cc11",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "8ae4e74f-1633-43d7-983a-c7e998c6016a",
+   "question": "What is the maximum file size limit per document?",
+   "why": "Resolves incomplete technical constraints.",
+   "options": [
+    "5MB",
+    "10MB",
+    "20MB"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "cb517e1b-0ccd-4761-86d5-154a516a6f8a",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "4dfa351c-f928-4be5-a7ce-f0269098ef05",
+   "question": "Does 'owners' refer to Ultimate Beneficial Owners (UBOs) or all legal shareholders?",
+   "why": "Resolves ambiguity of 'owners'.",
+   "options": [
+    "UBOs only",
+    "All shareholders > 25%"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "2d5b45ba-5223-4069-87f9-447964005384",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "4dfa351c-f928-4be5-a7ce-f0269098ef05",
+   "question": "What are the specific encryption or data masking requirements for stored ID documents?",
+   "why": "Resolves incomplete security requirements.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "e6aa8227-c1a1-4ff1-b91a-f4fdcca49c8d",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "8a8455f6-eb8b-4dda-ab72-5bbb5b100c2f",
+   "question": "What are the specific stages of the application process that should be visible to the merchant?",
+   "why": "Resolves ambiguity of 'application progress'.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "0dfa2252-7755-46a2-acc7-1cfffc21a937",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "0a810eee-ac24-4968-a232-25532736c9d0",
+   "question": "What is the time threshold that defines an application as 'stuck'?",
+   "why": "Resolves ambiguity of 'stuck'.",
+   "options": [
+    "24 hours",
+    "48 hours",
+    "5 business days"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "18fe09de-5fe3-41c8-9c5f-b9289fc55364",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "0a810eee-ac24-4968-a232-25532736c9d0",
+   "question": "Which specific roles within the Sales team are authorized to view this dashboard?",
+   "why": "Resolves incomplete access control.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "330c2900-39e9-4a06-bfe4-5ff2d617ad16",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "288e30fa-7f2c-4d7b-8325-df53fa396708",
+   "question": "Which PEP list standard (e.g., FATF) should be used to define Politically Exposed Persons?",
+   "why": "Resolves undefined term.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "641ee413-96c0-4531-a45e-658a14f2e5ab",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "288e30fa-7f2c-4d7b-8325-df53fa396708",
+   "question": "How should the MLRO provide approval (e.g., digital signature, system flag)?",
+   "why": "Resolves incomplete mechanism.",
+   "options": [
+    "Digital signature",
+    "System flag toggle"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "62b59649-dae4-4a36-a42c-5d6f0ca56cd8",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "be1db42e-7366-4063-bf63-5df6a5bd153f",
+   "question": "Which regulatory list (e.g., EU AML list, FATF grey list) defines 'high-risk third countries'?",
+   "why": "Resolves undefined term.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "58768a70-ad0b-45d8-82a2-261ade6fb70b",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "be1db42e-7366-4063-bf63-5df6a5bd153f",
+   "question": "What specific manual or automated steps constitute 'enhanced due diligence'?",
+   "why": "Resolves incomplete process definition.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "d1e1f9cf-a9ee-4d00-bb25-f7517c0c8c48",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "72a6e808-c25c-41e1-855e-42f51d5fda8b",
+   "question": "Which specific thresholds and checks must be configurable by business users?",
+   "why": "Resolves incomplete scope.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "267f8d73-421e-4431-be77-20a46fbfeae8",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "a8ca8f33-589c-457a-9f32-520cd0452c7d",
+   "question": "What is the technical mechanism for reporting to the FIU (e.g., secure file transfer, API)?",
+   "why": "Resolves incomplete mechanism.",
+   "options": [
+    "Secure API",
+    "SFTP upload",
+    "Manual portal"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "d3ccf7ef-70fc-429e-b33b-d44fa1018d17",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "69aed858-f69f-4676-8533-63733a2f351a",
+   "question": "Are there specific environment variables or build configurations required for the onboarding module?",
+   "why": "Resolves incomplete pipeline details.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "a49a260d-5d5a-483d-be18-a2f9885dc5ab",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "91d4b88a-896e-4a32-b687-d53eb3ed2822",
+   "question": "Which specific vendors are approved for document checks and sanctions screening?",
+   "why": "Resolves incomplete vendor identification.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "5ce9c34c-167c-4af7-a74c-845b60ae96b3",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "77a99c90-5af6-4f4c-ba59-f89720937d8f",
+   "question": "What is the maximum acceptable duration for a queue/retry mechanism before an application is considered 'lost'?",
+   "why": "Resolves ambiguity of 'loss of applications'.",
+   "options": [
+    "24 hours",
+    "48 hours",
+    "7 days"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "946d1dc9-0531-42c6-a4df-8814b53ce07d",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "7a046f56-e429-41f3-b91b-95224264e599",
+   "question": "What specific technical controls (e.g., encryption at rest, data minimization) are required for GDPR compliance?",
+   "why": "Resolves incomplete technical controls.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "def85713-4b15-4902-bd5b-dd4fe52ac4ee",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "3187b759-1487-4a1c-95cc-d7521db5dca8",
+   "question": "By what date must the data protection impact assessment be completed?",
+   "why": "Resolves incomplete timeline.",
+   "options": [],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "ece85f28-3bc8-4445-a4dd-8ef5eb9d998c",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "052b66b2-de42-4ada-bdaa-bf4b07fb9103",
+   "question": "How long must the system sustain the 500 applications per hour load to be considered 'peak'?",
+   "why": "Resolves ambiguity of 'peak'.",
+   "options": [
+    "1 hour",
+    "4 hours",
+    "8 hours"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "5a69ed9f-33a6-49a7-8709-3b63d8566d36",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "359dc837-9af4-4c27-954c-114e6790f583",
+   "question": "Over what time period is the 99.9% availability measured?",
+   "why": "Resolves incomplete measurement period.",
+   "options": [
+    "Monthly",
+    "Quarterly",
+    "Annually"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "6dbf7dad-ac26-4773-8e6a-0418af93f7a7",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "7d4688e3-1821-462c-97d0-6acc1537bc9c",
+   "question": "What is the required retention period for audit logs?",
+   "why": "Resolves incomplete retention requirement.",
+   "options": [
+    "5 years",
+    "7 years",
+    "10 years"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "3ea9f8ad-562d-48b2-a7eb-17d5c7d5c5e5",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "7d4688e3-1821-462c-97d0-6acc1537bc9c",
+   "question": "What is the required format for audit logs (e.g., JSON, CSV)?",
+   "why": "Resolves incomplete format requirement.",
+   "options": [
+    "JSON",
+    "CSV",
+    "Database table"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "2b5839f1-36f8-4b0b-bc30-0ed87bf6644b",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "48d2e64f-45f1-42c4-a76b-24f6fbc5a0eb",
+   "question": "What is the required retention period for identity document access logs?",
+   "why": "Resolves incomplete retention requirement.",
+   "options": [
+    "5 years",
+    "7 years",
+    "10 years"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  },
+  {
+   "id": "eaad29fc-9ba5-438c-8b27-38b431deb7e6",
+   "project_id": "63222661-7b73-4ff7-b134-9b7e10670cdf",
+   "requirement_id": "48d2e64f-45f1-42c4-a76b-24f6fbc5a0eb",
+   "question": "What is the required format for access logs?",
+   "why": "Resolves incomplete format requirement.",
+   "options": [
+    "JSON",
+    "CSV",
+    "Database table"
+   ],
+   "status": "open",
+   "answer": null,
+   "applied": false,
+   "created_at": "2026-11-26T20:03:56+00:00",
+   "answered_at": null
+  }
+ ],
+ "analysis": {
+  "analysed_docs": [
+   "afae472c-38e6-4e97-aa6c-18e94d256e51",
+   "c689d085-5a64-418f-91d5-ed68e4a2ffcb",
+   "c833f06e-0f85-4288-950b-d12e2f52c9cb"
+  ],
+  "guard": {
+   "ungrounded_requirements": 0,
+   "invalid_citations": 3,
+   "pii_masked": 0,
+   "injection_quarantined": 0
+  },
+  "done": {
+   "classified": [
+    "052b66b2-de42-4ada-bdaa-bf4b07fb9103",
+    "0a810eee-ac24-4968-a232-25532736c9d0",
+    "0c1bbe23-8025-4fdf-808d-72ef1589352f",
+    "116846f4-3e12-4a07-b0a9-da19e2094b02",
+    "15708dc2-dd8d-4569-a76d-473fb7c7634c",
+    "22f88042-f393-49bf-b565-96f2b9fd885c",
+    "288e30fa-7f2c-4d7b-8325-df53fa396708",
+    "3187b759-1487-4a1c-95cc-d7521db5dca8",
+    "359dc837-9af4-4c27-954c-114e6790f583",
+    "3a526dda-9c27-4bab-9c2b-1997bf1ff7b8",
+    "484e117c-f941-40c8-8af0-f420a6e3c112",
+    "48d2e64f-45f1-42c4-a76b-24f6fbc5a0eb",
+    "4dfa351c-f928-4be5-a7ce-f0269098ef05",
+    "69aed858-f69f-4676-8533-63733a2f351a",
+    "72a6e808-c25c-41e1-855e-42f51d5fda8b",
+    "72b3e7d0-bd39-41bd-a72b-24cbcca55c99",
+    "7512a448-4a40-42c3-9c92-f015fe9f4f96",
+    "77a99c90-5af6-4f4c-ba59-f89720937d8f",
+    "7a046f56-e429-41f3-b91b-95224264e599",
+    "7d4688e3-1821-462c-97d0-6acc1537bc9c",
+    "8127f46b-b064-4ecd-a931-7789354648c7",
+    "8a1e2268-d7d0-4879-a780-2eb34c633f91",
+    "8a8455f6-eb8b-4dda-ab72-5bbb5b100c2f",
+    "8ae4e74f-1633-43d7-983a-c7e998c6016a",
+    "8b58a3a8-2300-43d4-bae8-b5cf9d1b63ae",
+    "8bc46029-8a5d-48e2-aec2-90e72a30162f",
+    "91d4b88a-896e-4a32-b687-d53eb3ed2822",
+    "a33175f5-4245-40e1-a563-4d3e38574248",
+    "a5189a02-10e9-4b74-aa1a-f94d17f83094",
+    "a8ca8f33-589c-457a-9f32-520cd0452c7d",
+    "ad93d079-061d-4e42-b795-eb7519b0aaea",
+    "be1db42e-7366-4063-bf63-5df6a5bd153f",
+    "bef13742-1d07-4f6a-ac1a-7d04ddd24d8d",
+    "c0e81b8a-7de0-4e5f-94c8-3b43e964637d",
+    "c275c257-4dad-4a47-99f2-046fee424cc0",
+    "d600f138-ca79-4595-8cbc-066dbfa728b1",
+    "da135cba-3339-4f11-b0d8-9672156df2e9",
+    "dfabcfd0-96d2-4c03-9f3a-1fbd77da66d0",
+    "e83e6162-000f-48f4-b676-8619d2b5cde5",
+    "fb9a27e8-70be-48c3-ba2d-0d696d7fa119"
+   ],
+   "reviewed": [
+    "052b66b2-de42-4ada-bdaa-bf4b07fb9103",
+    "0a810eee-ac24-4968-a232-25532736c9d0",
+    "0c1bbe23-8025-4fdf-808d-72ef1589352f",
+    "116846f4-3e12-4a07-b0a9-da19e2094b02",
+    "15708dc2-dd8d-4569-a76d-473fb7c7634c",
+    "22f88042-f393-49bf-b565-96f2b9fd885c",
+    "288e30fa-7f2c-4d7b-8325-df53fa396708",
+    "3187b759-1487-4a1c-95cc-d7521db5dca8",
+    "359dc837-9af4-4c27-954c-114e6790f583",
+    "3a526dda-9c27-4bab-9c2b-1997bf1ff7b8",
+    "484e117c-f941-40c8-8af0-f420a6e3c112",
+    "48d2e64f-45f1-42c4-a76b-24f6fbc5a0eb",
+    "4dfa351c-f928-4be5-a7ce-f0269098ef05",
+    "69aed858-f69f-4676-8533-63733a2f351a",
+    "72a6e808-c25c-41e1-855e-42f51d5fda8b",
+    "72b3e7d0-bd39-41bd-a72b-24cbcca55c99",
+    "7512a448-4a40-42c3-9c92-f015fe9f4f96",
+    "77a99c90-5af6-4f4c-ba59-f89720937d8f",
+    "7a046f56-e429-41f3-b91b-95224264e599",
+    "7d4688e3-1821-462c-97d0-6acc1537bc9c",
+    "8127f46b-b064-4ecd-a931-7789354648c7",
+    "8a1e2268-d7d0-4879-a780-2eb34c633f91",
+    "8a8455f6-eb8b-4dda-ab72-5bbb5b100c2f",
+    "8ae4e74f-1633-43d7-983a-c7e998c6016a",
+    "8b58a3a8-2300-43d4-bae8-b5cf9d1b63ae",
+    "8bc46029-8a5d-48e2-aec2-90e72a30162f",
+    "91d4b88a-896e-4a32-b687-d53eb3ed2822",
+    "a33175f5-4245-40e1-a563-4d3e38574248",
+    "a5189a02-10e9-4b74-aa1a-f94d17f83094",
+    "a8ca8f33-589c-457a-9f32-520cd0452c7d",
+    "ad93d079-061d-4e42-b795-eb7519b0aaea",
+    "be1db42e-7366-4063-bf63-5df6a5bd153f",
+    "bef13742-1d07-4f6a-ac1a-7d04ddd24d8d",
+    "c0e81b8a-7de0-4e5f-94c8-3b43e964637d",
+    "c275c257-4dad-4a47-99f2-046fee424cc0",
+    "d600f138-ca79-4595-8cbc-066dbfa728b1",
+    "da135cba-3339-4f11-b0d8-9672156df2e9",
+    "dfabcfd0-96d2-4c03-9f3a-1fbd77da66d0",
+    "e83e6162-000f-48f4-b676-8619d2b5cde5",
+    "fb9a27e8-70be-48c3-ba2d-0d696d7fa119"
+   ],
+   "mapped": [
+    "052b66b2-de42-4ada-bdaa-bf4b07fb9103",
+    "0a810eee-ac24-4968-a232-25532736c9d0",
+    "0c1bbe23-8025-4fdf-808d-72ef1589352f",
+    "116846f4-3e12-4a07-b0a9-da19e2094b02",
+    "15708dc2-dd8d-4569-a76d-473fb7c7634c",
+    "22f88042-f393-49bf-b565-96f2b9fd885c",
+    "288e30fa-7f2c-4d7b-8325-df53fa396708",
+    "3187b759-1487-4a1c-95cc-d7521db5dca8",
+    "359dc837-9af4-4c27-954c-114e6790f583",
+    "3a526dda-9c27-4bab-9c2b-1997bf1ff7b8",
+    "484e117c-f941-40c8-8af0-f420a6e3c112",
+    "48d2e64f-45f1-42c4-a76b-24f6fbc5a0eb",
+    "4dfa351c-f928-4be5-a7ce-f0269098ef05",
+    "69aed858-f69f-4676-8533-63733a2f351a",
+    "72a6e808-c25c-41e1-855e-42f51d5fda8b",
+    "72b3e7d0-bd39-41bd-a72b-24cbcca55c99",
+    "7512a448-4a40-42c3-9c92-f015fe9f4f96",
+    "77a99c90-5af6-4f4c-ba59-f89720937d8f",
+    "7a046f56-e429-41f3-b91b-95224264e599",
+    "7d4688e3-1821-462c-97d0-6acc1537bc9c",
+    "8127f46b-b064-4ecd-a931-7789354648c7",
+    "8a1e2268-d7d0-4879-a780-2eb34c633f91",
+    "8a8455f6-eb8b-4dda-ab72-5bbb5b100c2f",
+    "8ae4e74f-1633-43d7-983a-c7e998c6016a",
+    "8b58a3a8-2300-43d4-bae8-b5cf9d1b63ae",
+    "8bc46029-8a5d-48e2-aec2-90e72a30162f",
+    "91d4b88a-896e-4a32-b687-d53eb3ed2822",
+    "a33175f5-4245-40e1-a563-4d3e38574248",
+    "a5189a02-10e9-4b74-aa1a-f94d17f83094",
+    "a8ca8f33-589c-457a-9f32-520cd0452c7d",
+    "ad93d079-061d-4e42-b795-eb7519b0aaea",
+    "be1db42e-7366-4063-bf63-5df6a5bd153f",
+    "bef13742-1d07-4f6a-ac1a-7d04ddd24d8d",
+    "c0e81b8a-7de0-4e5f-94c8-3b43e964637d",
+    "c275c257-4dad-4a47-99f2-046fee424cc0",
+    "d600f138-ca79-4595-8cbc-066dbfa728b1",
+    "da135cba-3339-4f11-b0d8-9672156df2e9",
+    "dfabcfd0-96d2-4c03-9f3a-1fbd77da66d0",
+    "e83e6162-000f-48f4-b676-8619d2b5cde5",
+    "fb9a27e8-70be-48c3-ba2d-0d696d7fa119"
+   ],
+   "criteria": [
+    "052b66b2-de42-4ada-bdaa-bf4b07fb9103",
+    "0a810eee-ac24-4968-a232-25532736c9d0",
+    "0c1bbe23-8025-4fdf-808d-72ef1589352f",
+    "116846f4-3e12-4a07-b0a9-da19e2094b02",
+    "15708dc2-dd8d-4569-a76d-473fb7c7634c",
+    "22f88042-f393-49bf-b565-96f2b9fd885c",
+    "288e30fa-7f2c-4d7b-8325-df53fa396708",
+    "3187b759-1487-4a1c-95cc-d7521db5dca8",
+    "359dc837-9af4-4c27-954c-114e6790f583",
+    "3a526dda-9c27-4bab-9c2b-1997bf1ff7b8",
+    "484e117c-f941-40c8-8af0-f420a6e3c112",
+    "48d2e64f-45f1-42c4-a76b-24f6fbc5a0eb",
+    "4dfa351c-f928-4be5-a7ce-f0269098ef05",
+    "69aed858-f69f-4676-8533-63733a2f351a",
+    "72a6e808-c25c-41e1-855e-42f51d5fda8b",
+    "72b3e7d0-bd39-41bd-a72b-24cbcca55c99",
+    "7512a448-4a40-42c3-9c92-f015fe9f4f96",
+    "77a99c90-5af6-4f4c-ba59-f89720937d8f",
+    "7a046f56-e429-41f3-b91b-95224264e599",
+    "7d4688e3-1821-462c-97d0-6acc1537bc9c",
+    "8127f46b-b064-4ecd-a931-7789354648c7",
+    "8a1e2268-d7d0-4879-a780-2eb34c633f91",
+    "8a8455f6-eb8b-4dda-ab72-5bbb5b100c2f",
+    "8ae4e74f-1633-43d7-983a-c7e998c6016a",
+    "8b58a3a8-2300-43d4-bae8-b5cf9d1b63ae",
+    "8bc46029-8a5d-48e2-aec2-90e72a30162f",
+    "91d4b88a-896e-4a32-b687-d53eb3ed2822",
+    "a33175f5-4245-40e1-a563-4d3e38574248",
+    "a5189a02-10e9-4b74-aa1a-f94d17f83094",
+    "a8ca8f33-589c-457a-9f32-520cd0452c7d",
+    "ad93d079-061d-4e42-b795-eb7519b0aaea",
+    "be1db42e-7366-4063-bf63-5df6a5bd153f",
+    "bef13742-1d07-4f6a-ac1a-7d04ddd24d8d",
+    "c0e81b8a-7de0-4e5f-94c8-3b43e964637d",
+    "c275c257-4dad-4a47-99f2-046fee424cc0",
+    "d600f138-ca79-4595-8cbc-066dbfa728b1",
+    "da135cba-3339-4f11-b0d8-9672156df2e9",
+    "dfabcfd0-96d2-4c03-9f3a-1fbd77da66d0",
+    "e83e6162-000f-48f4-b676-8619d2b5cde5",
+    "fb9a27e8-70be-48c3-ba2d-0d696d7fa119"
+   ],
+   "risked": [
+    "052b66b2-de42-4ada-bdaa-bf4b07fb9103",
+    "0a810eee-ac24-4968-a232-25532736c9d0",
+    "0c1bbe23-8025-4fdf-808d-72ef1589352f",
+    "116846f4-3e12-4a07-b0a9-da19e2094b02",
+    "15708dc2-dd8d-4569-a76d-473fb7c7634c",
+    "22f88042-f393-49bf-b565-96f2b9fd885c",
+    "288e30fa-7f2c-4d7b-8325-df53fa396708",
+    "3187b759-1487-4a1c-95cc-d7521db5dca8",
+    "359dc837-9af4-4c27-954c-114e6790f583",
+    "3a526dda-9c27-4bab-9c2b-1997bf1ff7b8",
+    "484e117c-f941-40c8-8af0-f420a6e3c112",
+    "48d2e64f-45f1-42c4-a76b-24f6fbc5a0eb",
+    "4dfa351c-f928-4be5-a7ce-f0269098ef05",
+    "69aed858-f69f-4676-8533-63733a2f351a",
+    "72a6e808-c25c-41e1-855e-42f51d5fda8b",
+    "72b3e7d0-bd39-41bd-a72b-24cbcca55c99",
+    "7512a448-4a40-42c3-9c92-f015fe9f4f96",
+    "77a99c90-5af6-4f4c-ba59-f89720937d8f",
+    "7a046f56-e429-41f3-b91b-95224264e599",
+    "7d4688e3-1821-462c-97d0-6acc1537bc9c",
+    "8127f46b-b064-4ecd-a931-7789354648c7",
+    "8a1e2268-d7d0-4879-a780-2eb34c633f91",
+    "8a8455f6-eb8b-4dda-ab72-5bbb5b100c2f",
+    "8ae4e74f-1633-43d7-983a-c7e998c6016a",
+    "8b58a3a8-2300-43d4-bae8-b5cf9d1b63ae",
+    "8bc46029-8a5d-48e2-aec2-90e72a30162f",
+    "91d4b88a-896e-4a32-b687-d53eb3ed2822",
+    "a33175f5-4245-40e1-a563-4d3e38574248",
+    "a5189a02-10e9-4b74-aa1a-f94d17f83094",
+    "a8ca8f33-589c-457a-9f32-520cd0452c7d",
+    "ad93d079-061d-4e42-b795-eb7519b0aaea",
+    "be1db42e-7366-4063-bf63-5df6a5bd153f",
+    "bef13742-1d07-4f6a-ac1a-7d04ddd24d8d",
+    "c0e81b8a-7de0-4e5f-94c8-3b43e964637d",
+    "c275c257-4dad-4a47-99f2-046fee424cc0",
+    "d600f138-ca79-4595-8cbc-066dbfa728b1",
+    "da135cba-3339-4f11-b0d8-9672156df2e9",
+    "dfabcfd0-96d2-4c03-9f3a-1fbd77da66d0",
+    "e83e6162-000f-48f4-b676-8619d2b5cde5",
+    "fb9a27e8-70be-48c3-ba2d-0d696d7fa119"
+   ]
+  },
+  "controls": [
+   {
+    "control_id": "C-CIP",
+    "title": "Customer identification and verification",
+    "description": "Regulated entities must identify every customer before establishing an account-based relationship and verify identity using an Officially Valid Document (passport, driving licence, voter ID, proof of Aadhaar possession, NREGA card) or its equivalent e-document, together with PAN or Form 60. Customers must not be allowed to open anonymous or fictitious-name accounts.",
+    "regulations": [
+     "EU AML Directive (2015/849 as amended)",
+     "FATF Recommendations",
+     "FinCEN Customer Identification Program (31 CFR 1020.220)",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-AUD-002",
+     "KYC-FR-002",
+     "KYC-PRV-004",
+     "KYC-REG-003",
+     "KYC-REG-004",
+     "KYC-REG-006",
+     "KYC-SEC-001",
+     "KYC-SEC-002",
+     "KYC-SEC-003"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-RISK",
+    "title": "Risk-based customer categorisation",
+    "description": "Each customer must be categorised as low, medium or high risk using documented parameters such as customer type, geography, product, delivery channel and transaction pattern. The intensity of due diligence and monitoring must match the assigned risk category, and the categorisation must be reviewable.",
+    "regulations": [
+     "FATF Recommendations",
+     "RBI KYC Master Direction"
+    ],
+    "status": "partial",
+    "covered_by": [
+     "KYC-REG-006"
+    ],
+    "suggested_requirement": "The system shall assign every customer a documented low, medium or high risk category at onboarding and re-assess it when customer information or behaviour changes."
+   },
+   {
+    "control_id": "C-SANCTIONS",
+    "title": "Sanctions and watchlist screening",
+    "description": "Customers and related parties must be screened against applicable sanctions lists, and assets of designated persons must be frozen without delay and reported to the authorities.",
+    "regulations": [
+     "EU AML Directive (2015/849 as amended)",
+     "FATF Recommendations",
+     "OFAC sanctions regulations"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-FR-002",
+     "KYC-INT-001",
+     "KYC-REG-001",
+     "KYC-REG-002",
+     "KYC-REG-006"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-PEP",
+    "title": "PEP identification and senior approval",
+    "description": "Institutions need risk-management systems to determine whether a customer or beneficial owner is a politically exposed person and, for foreign PEPs and higher-risk domestic PEPs, must obtain senior management approval, establish source of wealth and funds, and conduct enhanced ongoing monitoring.",
+    "regulations": [
+     "FATF Recommendations",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-REG-005"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-UBO",
+    "title": "Beneficial ownership of legal entities",
+    "description": "For companies, partnerships, trusts and other legal entities, the natural persons who ultimately own or control the entity must be identified and verified. A controlling ownership interest is defined by a percentage threshold set in the direction (verify the current figure); where no owner meets the threshold the person exercising control, or the senior managing official, is identified.",
+    "regulations": [
+     "EU AML Directive (2015/849 as amended)",
+     "FATF Recommendations",
+     "FinCEN CDD Rule (31 CFR 1010.230)",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-PRV-001",
+     "KYC-PRV-002",
+     "KYC-REG-003",
+     "KYC-REG-004"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-EDD",
+    "title": "Enhanced due diligence for high-risk customers",
+    "description": "High-risk customers, politically exposed persons and non-face-to-face customers require enhanced due diligence: additional identity evidence, source of funds or wealth where relevant, senior management approval before establishing or continuing a relationship with a PEP, and closer ongoing monitoring.",
+    "regulations": [
+     "EU AML Directive (2015/849 as amended)",
+     "FATF Recommendations",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-FR-002",
+     "KYC-REG-005",
+     "KYC-REG-006"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-CONSENT",
+    "title": "Notice and consent for personal data",
+    "description": "Personal data may be processed only for a lawful purpose, with free, specific, informed and unambiguous consent after a clear notice, or under a defined legitimate use such as compliance with a legal obligation. Consent must be as easy to withdraw as to give, and the data fiduciary must be able to show it was obtained.",
+    "regulations": [
+     "Aadhaar Act 2016 and UIDAI circulars",
+     "DPDP Act 2023",
+     "GDPR",
+     "GLBA Safeguards and Privacy Rules"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-PRV-004"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-MINIMISE",
+    "title": "Data minimisation and purpose limitation",
+    "description": "Only the personal data necessary for the stated purpose may be collected, and it must be erased once the purpose is served unless a law requires retention. KYC records retained under anti-money-laundering law are a legal-retention case.",
+    "regulations": [
+     "DPDP Act 2023",
+     "GDPR"
+    ],
+    "status": "partial",
+    "covered_by": [
+     "KYC-PRV-002",
+     "KYC-UX-001"
+    ],
+    "suggested_requirement": "The system shall collect only the identity data necessary for KYC and shall not reuse it for other purposes without separate consent."
+   },
+   {
+    "control_id": "C-RETENTION",
+    "title": "Record retention for at least five years",
+    "description": "Identification records and transaction records must be preserved for at least five years after the business relationship ends or the transaction takes place, in a form that can be produced promptly for competent authorities.",
+    "regulations": [
+     "Bank Secrecy Act recordkeeping",
+     "FATF Recommendations",
+     "Illustrative internal policy",
+     "PMLA 2002 and PML Rules",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-AUD-001",
+     "KYC-PRV-005",
+     "KYC-REG-007"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-MONITOR",
+    "title": "Ongoing transaction monitoring",
+    "description": "Transactions must be monitored on an ongoing basis against the customer's profile and risk category, with alert rules calibrated to risk, documented alert handling, and prescribed threshold reports such as large cash transactions.",
+    "regulations": [
+     "FATF Recommendations",
+     "FinCEN CDD Rule (31 CFR 1010.230)",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-REG-004",
+     "KYC-REG-008"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-STR",
+    "title": "Suspicious activity reporting",
+    "description": "Reporting entities must report suspicious transactions to the Financial Intelligence Unit - India promptly after concluding that a transaction is suspicious (the Rules set a short working-day deadline, verify the current figure), must not tip off the customer, and must keep the reasoning for decisions not to report.",
+    "regulations": [
+     "Bank Secrecy Act SAR rules",
+     "FATF Recommendations",
+     "PMLA 2002 and PML Rules"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-REG-008"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-LIVENESS",
+    "title": "Biometric liveness and presentation-attack detection",
+    "description": "Biometric capture used for identity verification should include presentation attack detection (liveness) that is tested against spoofing with photos, replayed video, masks and deepfakes, and report attack-detection error rates.",
+    "regulations": [
+     "ISO/IEC 30107-3",
+     "NIST SP 800-63A",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-SEC-001"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-DOCFRAUD",
+    "title": "Document authenticity and tamper detection",
+    "description": "Identity assurance level 2 requires evidence of identity to be validated as genuine and the applicant to be verified as its owner, in person or remotely, using biometric comparison or equivalent, with detection of forged or tampered documents and presentation attacks.",
+    "regulations": [
+     "NIST SP 800-63A",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-INT-001",
+     "KYC-SEC-001"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-AUDIT",
+    "title": "Tamper-evident audit trail of KYC decisions",
+    "description": "Identification records and transaction records must be preserved for at least five years after the business relationship ends or the transaction takes place, in a form that can be produced promptly for competent authorities.",
+    "regulations": [
+     "GDPR",
+     "ISO/IEC 27001:2022",
+     "OWASP ASVS 4.0",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-AUD-001",
+     "KYC-AUD-002",
+     "KYC-PRV-002",
+     "KYC-SEC-002",
+     "KYC-SEC-003",
+     "KYC-UX-001"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-ENCRYPT",
+    "title": "Encryption and masking of KYC data",
+    "description": "The data fiduciary must protect personal data in its possession or under its control, including data processed by processors, by taking reasonable security safeguards such as encryption, obfuscation or masking, access controls and logging, to prevent a personal data breach.",
+    "regulations": [
+     "Aadhaar Act 2016 and UIDAI circulars",
+     "DPDP Act 2023",
+     "GDPR",
+     "GLBA Safeguards and Privacy Rules",
+     "ISO/IEC 27001:2022"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-SEC-002",
+     "KYC-SEC-003"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-ACCESS",
+    "title": "Role-based access to KYC data",
+    "description": "An information security management system should apply controls for access management and least privilege, cryptography, logging and monitoring, secure development, supplier relationships and incident management.",
+    "regulations": [
+     "GDPR",
+     "ISO/IEC 27001:2022",
+     "Illustrative internal policy",
+     "OWASP ASVS 4.0"
+    ],
+    "status": "partial",
+    "covered_by": [
+     "KYC-SEC-002",
+     "KYC-SEC-003"
+    ],
+    "suggested_requirement": "The system shall restrict access to KYC records by role on a least-privilege basis and log every access to full identity documents."
+   },
+   {
+    "control_id": "C-BREACH",
+    "title": "Breach detection and notification",
+    "description": "On a personal data breach the data fiduciary must notify the Data Protection Board and each affected data principal in the prescribed form and manner.",
+    "regulations": [
+     "DPDP Act 2023",
+     "GDPR"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-SEC-004"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-RIGHTS",
+    "title": "Data-subject rights handling",
+    "description": "Data principals have the right to access a summary of their data and processing, to correct and complete it, to request erasure (subject to legal retention), to grievance redress, and to nominate another person to exercise rights.",
+    "regulations": [
+     "DPDP Act 2023",
+     "GDPR"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-PRV-005"
+    ],
+    "suggested_requirement": ""
+   },
+   {
+    "control_id": "C-HUMAN-REVIEW",
+    "title": "Manual review and appeal of automated decisions",
+    "description": "People have the right not to be subject to solely automated decisions with legal or similarly significant effects, such as automatically rejecting an account application. Where such decisions are permitted, safeguards include the right to human intervention, to express a view and to contest the decision.",
+    "regulations": [
+     "GDPR",
+     "Illustrative internal policy",
+     "RBI KYC Master Direction"
+    ],
+    "status": "covered",
+    "covered_by": [
+     "KYC-FR-001",
+     "KYC-PERF-001",
+     "KYC-PRV-005",
+     "KYC-STK-001",
+     "KYC-UX-002"
+    ],
+    "suggested_requirement": ""
+   }
+  ],
+  "threats": [
+   {
+    "id": "d8187f64-b4df-42dc-88cc-3551d05d5388",
+    "stride": "Spoofing",
+    "threat": "Submission of forged identity documents or deepfake media by malicious actors.",
+    "asset": "Identity verification integrity",
+    "mitigated_by": [
+     "a5189a02-10e9-4b74-aa1a-f94d17f83094"
+    ]
+   },
+   {
+    "id": "6ad49a00-8f38-4c13-b825-bcfc9ad7daca",
+    "stride": "Tampering",
+    "threat": "Unauthorized modification of screening thresholds to bypass sanctions checks.",
+    "asset": "Screening configuration",
+    "mitigated_by": [
+     "72a6e808-c25c-41e1-855e-42f51d5fda8b"
+    ]
+   },
+   {
+    "id": "e3639e6d-eca9-45b9-a053-0b80bc4439bc",
+    "stride": "Repudiation",
+    "threat": "Human reviewer denies performing a specific approval or rejection action.",
+    "asset": "Audit logs",
+    "mitigated_by": [
+     "7d4688e3-1821-462c-97d0-6acc1537bc9c"
+    ]
+   },
+   {
+    "id": "bae18d48-4960-4ac3-8f08-df902726963b",
+    "stride": "Information disclosure",
+    "threat": "Unauthorized access to PII by internal staff exceeding their role-based permissions.",
+    "asset": "Merchant PII",
+    "mitigated_by": [
+     "8127f46b-b064-4ecd-a931-7789354648c7"
+    ]
+   },
+   {
+    "id": "d4abac13-a6a3-483a-b436-34a8161554dd",
+    "stride": "Denial of service",
+    "threat": "Overloading the document upload portal to prevent legitimate merchant onboarding.",
+    "asset": "Onboarding portal availability",
+    "mitigated_by": []
+   },
+   {
+    "id": "3ca4636d-d157-4b86-a3d3-d1e6360c4237",
+    "stride": "Elevation of privilege",
+    "threat": "Exploiting the CI/CD pipeline to gain administrative access to the production KYC environment.",
+    "asset": "Production system integrity",
+    "mitigated_by": [
+     "69aed858-f69f-4676-8533-63733a2f351a"
+    ]
+   },
+   {
+    "id": "4efa9b9d-f919-4772-8610-276e89fac472",
+    "stride": "Information disclosure",
+    "threat": "Leaking of identity documents during transit between the system and external screening vendors.",
+    "asset": "Merchant identity documents",
+    "mitigated_by": [
+     "116846f4-3e12-4a07-b0a9-da19e2094b02"
+    ]
+   },
+   {
+    "id": "0acd67bf-4529-4b66-b6f0-a3a5fe5cbf0a",
+    "stride": "Tampering",
+    "threat": "Manipulation of application status tracking to deceive merchants about the review process.",
+    "asset": "Application status data",
+    "mitigated_by": []
+   }
+  ],
+  "security_sig": "052b66b2-de42-4ada-bdaa-bf4b07fb9103:the system shall handle 500 onboarding applications per hour at peak|0a810eee-ac24-4968-a232-25532736c9d0:the system shall provide a dashboard for the sales team to view applications stuck in review|0c1bbe23-8025-4fdf-808d-72ef1589352f:the system shall retain all onboarding records for five years after the relationship ends|15708dc2-dd8d-4569-a76d-473fb7c7634c:the system shall provide automated approval for low risk merchants within one hour|288e30fa-7f2c-4d7b-8325-df53fa396708:the system shall require mlro approval for politically exposed persons before activation|3187b759-1487-4a1c-95cc-d7521db5dca8:the system shall undergo a data protection impact assessment|359dc837-9af4-4c27-954c-114e6790f583:the system shall maintain 99 9 percent availability|3a526dda-9c27-4bab-9c2b-1997bf1ff7b8:the system shall route non low risk merchant applications to a human reviewer|48d2e64f-45f1-42c4-a76b-24f6fbc5a0eb:the system shall log every access to identity documents|4dfa351c-f928-4be5-a7ce-f0269098ef05:the system shall provide a web portal for merchants to upload ids of company owners|69aed858-f69f-4676-8533-63733a2f351a:the system shall use the existing continuous deployment pipeline for onboarding|72a6e808-c25c-41e1-855e-42f51d5fda8b:the system shall make thresholds and checks configurable|72b3e7d0-bd39-41bd-a72b-24cbcca55c99:the system shall identify every beneficial owner holding more than 25 percent or exercising control|7512a448-4a40-42c3-9c92-f015fe9f4f96:the system shall screen every merchant against eu and un sanctions lists daily after onboarding|77a99c90-5af6-4f4c-ba59-f89720937d8f:the system shall ensure that vendor outages do not result in the loss of applications|7a046f56-e429-41f3-b91b-95224264e599:the system shall process personal data of beneficial owners in compliance with gdpr|7d4688e3-1821-462c-97d0-6acc1537bc9c:the system shall log every decision made|8a8455f6-eb8b-4dda-ab72-5bbb5b100c2f:the system shall provide a status tracking feature for merchants to view their application progress|8ae4e74f-1633-43d7-983a-c7e998c6016a:the system shall provide a web portal for merchants to upload company registration documents|91d4b88a-896e-4a32-b687-d53eb3ed2822:the system shall integrate with external vendors via apis for document checks and screening|a8ca8f33-589c-457a-9f32-520cd0452c7d:the system shall allow reporting of suspicious activity to the financial intelligence unit without alerting the merchant|be1db42e-7366-4063-bf63-5df6a5bd153f:the system shall perform enhanced due diligence for merchants from high risk third countries|da135cba-3339-4f11-b0d8-9672156df2e9:the system shall screen every merchant against eu and un sanctions lists at onboarding|dfabcfd0-96d2-4c03-9f3a-1fbd77da66d0:the system shall allow a human to review an automated rejection of a merchant upon request|e83e6162-000f-48f4-b676-8619d2b5cde5:the system shall support onboarding updates on a two week release cycle|fb9a27e8-70be-48c3-ba2d-0d696d7fa119:the system shall verify every beneficial owner identified",
+  "conflicts": [
+   {
+    "id": "49ab8684-c1a6-4c27-988f-8511e7cb9a98",
+    "requirement_ids": [
+     "48d2e64f-45f1-42c4-a76b-24f6fbc5a0eb",
+     "8127f46b-b064-4ecd-a931-7789354648c7"
+    ],
+    "kind": "duplicate",
+    "explanation": "Both requirements mandate logging every access to identity documents.",
+    "confidence": 1.0,
+    "status": "open",
+    "resolution": null,
+    "sig": "48d2e64f-45f1-42c4-a76b-24f6fbc5a0eb:the system shall log every access to identity documents|8127f46b-b064-4ecd-a931-7789354648c7:the system shall restrict access to kyc records by role on a least privilege basis and log every access to full identity documents"
+   }
+  ],
+  "conflict_sig": "052b66b2-de42-4ada-bdaa-bf4b07fb9103:the system shall handle 500 onboarding applications per hour at peak|0a810eee-ac24-4968-a232-25532736c9d0:the system shall provide a dashboard for the sales team to view applications stuck in review|0c1bbe23-8025-4fdf-808d-72ef1589352f:the system shall retain all onboarding records for five years after the relationship ends|116846f4-3e12-4a07-b0a9-da19e2094b02:the system shall encrypt kyc data in transit and at rest and mask identifiers such as aadhaar and pan wherever they are displayed or logged|15708dc2-dd8d-4569-a76d-473fb7c7634c:the system shall provide automated approval for low risk merchants within one hour|22f88042-f393-49bf-b565-96f2b9fd885c:the system shall present a clear privacy notice and capture the customer s recorded consent with timestamp and purpose before collecting identity data or biometrics|288e30fa-7f2c-4d7b-8325-df53fa396708:the system shall require mlro approval for politically exposed persons before activation|3187b759-1487-4a1c-95cc-d7521db5dca8:the system shall undergo a data protection impact assessment|359dc837-9af4-4c27-954c-114e6790f583:the system shall maintain 99 9 percent availability|3a526dda-9c27-4bab-9c2b-1997bf1ff7b8:the system shall route non low risk merchant applications to a human reviewer|484e117c-f941-40c8-8af0-f420a6e3c112:the system shall implement automated scanning of all uploaded documents for malware or malicious scripts|48d2e64f-45f1-42c4-a76b-24f6fbc5a0eb:the system shall log every access to identity documents|4dfa351c-f928-4be5-a7ce-f0269098ef05:the system shall provide a web portal for merchants to upload ids of company owners|69aed858-f69f-4676-8533-63733a2f351a:the system shall use the existing continuous deployment pipeline for onboarding|72a6e808-c25c-41e1-855e-42f51d5fda8b:the system shall make thresholds and checks configurable|72b3e7d0-bd39-41bd-a72b-24cbcca55c99:the system shall identify every beneficial owner holding more than 25 percent or exercising control|7512a448-4a40-42c3-9c92-f015fe9f4f96:the system shall screen every merchant against eu and un sanctions lists daily after onboarding|77a99c90-5af6-4f4c-ba59-f89720937d8f:the system shall ensure that vendor outages do not result in the loss of applications|7a046f56-e429-41f3-b91b-95224264e599:the system shall process personal data of beneficial owners in compliance with gdpr|7d4688e3-1821-462c-97d0-6acc1537bc9c:the system shall log every decision made|8127f46b-b064-4ecd-a931-7789354648c7:the system shall restrict access to kyc records by role on a least privilege basis and log every access to full identity documents|8a1e2268-d7d0-4879-a780-2eb34c633f91:the system shall maintain a cryptographically signed audit trail for all automated and manual kyc decisions|8a8455f6-eb8b-4dda-ab72-5bbb5b100c2f:the system shall provide a status tracking feature for merchants to view their application progress|8ae4e74f-1633-43d7-983a-c7e998c6016a:the system shall provide a web portal for merchants to upload company registration documents|8b58a3a8-2300-43d4-bae8-b5cf9d1b63ae:the system shall let customers request access correction or erasure of their data and shall record where retention law overrides erasure|8bc46029-8a5d-48e2-aec2-90e72a30162f:the system shall implement rate limiting on the merchant web portal to prevent brute force attacks on document upload endpoints|91d4b88a-896e-4a32-b687-d53eb3ed2822:the system shall integrate with external vendors via apis for document checks and screening|a33175f5-4245-40e1-a563-4d3e38574248:the system shall implement multi factor authentication for all internal users accessing the dashboard and review portals|a5189a02-10e9-4b74-aa1a-f94d17f83094:the system shall perform liveness detection and face matching against the identity document for remote onboarding and reject presentation attacks|a8ca8f33-589c-457a-9f32-520cd0452c7d:the system shall allow reporting of suspicious activity to the financial intelligence unit without alerting the merchant|ad93d079-061d-4e42-b795-eb7519b0aaea:the system shall implement an automated purge process to permanently delete data after the five year retention period expires unless a legal hold is active|be1db42e-7366-4063-bf63-5df6a5bd153f:the system shall perform enhanced due diligence for merchants from high risk third countries|bef13742-1d07-4f6a-ac1a-7d04ddd24d8d:the system shall detect personal data incidents and support notifying the regulator and affected customers within the legal deadline|c0e81b8a-7de0-4e5f-94c8-3b43e964637d:the system shall implement automated integrity checks for all uploaded identity documents to detect tampering or digital manipulation|c275c257-4dad-4a47-99f2-046fee424cc0:the system shall perform automated validation of the configuration changes made to screening thresholds to prevent unauthorized or erroneous modifications|d600f138-ca79-4595-8cbc-066dbfa728b1:the system shall enforce secure time limited access tokens for all api integrations with external document verification vendors|da135cba-3339-4f11-b0d8-9672156df2e9:the system shall screen every merchant against eu and un sanctions lists at onboarding|dfabcfd0-96d2-4c03-9f3a-1fbd77da66d0:the system shall allow a human to review an automated rejection of a merchant upon request|e83e6162-000f-48f4-b676-8619d2b5cde5:the system shall support onboarding updates on a two week release cycle|fb9a27e8-70be-48c3-ba2d-0d696d7fa119:the system shall verify every beneficial owner identified",
+  "risks": [
+   {
+    "id": "7b6c2486-0100-42ef-a352-8e343e317bca",
+    "requirement_id": "15708dc2-dd8d-4569-a76d-473fb7c7634c",
+    "risk": "Vague definition of 'low-risk' leads to inconsistent automated approvals, potentially onboarding high-risk entities.",
+    "risk_type": "compliance",
+    "likelihood": 4,
+    "impact": 5,
+    "mitigation": "Define specific, quantifiable risk scoring criteria for automated approval.",
+    "confidence": 0.8
+   },
+   {
+    "id": "331586c6-023e-4659-b405-4e8c222e7284",
+    "requirement_id": "3a526dda-9c27-4bab-9c2b-1997bf1ff7b8",
+    "risk": "Lack of clear routing criteria results in operational bottlenecks or missed high-risk reviews.",
+    "risk_type": "operational",
+    "likelihood": 4,
+    "impact": 4,
+    "mitigation": "Establish a documented decision matrix for human intervention triggers.",
+    "confidence": 0.8
+   },
+   {
+    "id": "c7d0fb34-3dd4-47c3-87d9-377f10b9a954",
+    "requirement_id": "e83e6162-000f-48f4-b676-8619d2b5cde5",
+    "risk": "Two-week release cycle may be too slow to respond to urgent regulatory changes or critical security patches.",
+    "risk_type": "operational",
+    "likelihood": 3,
+    "impact": 3,
+    "mitigation": "Implement an emergency hotfix process outside the standard release cycle.",
+    "confidence": 0.7
+   },
+   {
+    "id": "a1c1635f-1f97-4ffc-aece-1a793a7101f5",
+    "requirement_id": "8ae4e74f-1633-43d7-983a-c7e998c6016a",
+    "risk": "Insecure document upload portal could lead to unauthorized data access or malicious file injection.",
+    "risk_type": "security",
+    "likelihood": 4,
+    "impact": 5,
+    "mitigation": "Implement strict file type validation, malware scanning, and secure storage.",
+    "confidence": 0.9
+   },
+   {
+    "id": "5002fad4-b308-4b7d-8986-8b2138bafca8",
+    "requirement_id": "4dfa351c-f928-4be5-a7ce-f0269098ef05",
+    "risk": "Improper handling of sensitive UBO identity documents leads to GDPR violations and data breaches.",
+    "risk_type": "compliance",
+    "likelihood": 4,
+    "impact": 5,
+    "mitigation": "Apply encryption at rest and strict access controls to UBO data.",
+    "confidence": 0.9
+   },
+   {
+    "id": "9acdb144-ef3e-4cdb-b4b4-73473a56d700",
+    "requirement_id": "8a8455f6-eb8b-4dda-ab72-5bbb5b100c2f",
+    "risk": "Lack of transparency in status tracking may lead to customer frustration and increased support overhead.",
+    "risk_type": "business",
+    "likelihood": 2,
+    "impact": 2,
+    "mitigation": "Define clear status states and automated notifications for applicants.",
+    "confidence": 0.6
+   },
+   {
+    "id": "464e27b6-c82b-455b-a21d-62a616269598",
+    "requirement_id": "0a810eee-ac24-4968-a232-25532736c9d0",
+    "risk": "Inadequate visibility into stuck applications causes regulatory delays in onboarding timelines.",
+    "risk_type": "operational",
+    "likelihood": 3,
+    "impact": 3,
+    "mitigation": "Implement automated alerts for applications exceeding defined SLA thresholds.",
+    "confidence": 0.7
+   },
+   {
+    "id": "7d5b52bf-59bb-4a1b-b44c-53cea0f9534b",
+    "requirement_id": "da135cba-3339-4f11-b0d8-9672156df2e9",
+    "risk": "Failure to screen against sanctions lists results in severe regulatory fines and legal liability.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Implement automated, real-time screening against global sanctions databases.",
+    "confidence": 0.9
+   },
+   {
+    "id": "0194ce5f-752f-4ccd-af19-11dcdad8a246",
+    "requirement_id": "7512a448-4a40-42c3-9c92-f015fe9f4f96",
+    "risk": "Failure to perform daily screening allows sanctioned entities to continue using services undetected.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Schedule automated daily batch processing for all active merchant profiles.",
+    "confidence": 0.9
+   },
+   {
+    "id": "b58181dc-d67e-4c3b-8a4d-1a0c199cc034",
+    "requirement_id": "72b3e7d0-bd39-41bd-a72b-24cbcca55c99",
+    "risk": "Inaccurate UBO identification leads to non-compliance with AML directives and potential money laundering.",
+    "risk_type": "compliance",
+    "likelihood": 3,
+    "impact": 5,
+    "mitigation": "Integrate with official business registries for automated UBO verification.",
+    "confidence": 0.9
+   },
+   {
+    "id": "e81f25eb-b006-4dbc-be81-3ecb8aefbf8c",
+    "requirement_id": "fb9a27e8-70be-48c3-ba2d-0d696d7fa119",
+    "risk": "Failure to verify UBOs allows shell companies to bypass KYC controls.",
+    "risk_type": "compliance",
+    "likelihood": 3,
+    "impact": 5,
+    "mitigation": "Mandate identity document verification for all identified beneficial owners.",
+    "confidence": 0.9
+   },
+   {
+    "id": "cfb48237-af62-42ff-aed2-d601c865ac93",
+    "requirement_id": "288e30fa-7f2c-4d7b-8325-df53fa396708",
+    "risk": "Ambiguous PEP approval process leads to unauthorized onboarding of high-risk individuals.",
+    "risk_type": "compliance",
+    "likelihood": 4,
+    "impact": 5,
+    "mitigation": "Define a mandatory, documented MLRO sign-off workflow for all PEPs.",
+    "confidence": 0.8
+   },
+   {
+    "id": "021b613c-ec95-4d9f-88c7-b07847006632",
+    "requirement_id": "be1db42e-7366-4063-bf63-5df6a5bd153f",
+    "risk": "Incomplete EDD procedures for high-risk countries increase exposure to financial crime.",
+    "risk_type": "compliance",
+    "likelihood": 4,
+    "impact": 5,
+    "mitigation": "Implement a mandatory EDD checklist for all merchants from high-risk jurisdictions.",
+    "confidence": 0.8
+   },
+   {
+    "id": "9c1bfd71-46a0-4fda-9b3d-e303d2fb99a8",
+    "requirement_id": "dfabcfd0-96d2-4c03-9f3a-1fbd77da66d0",
+    "risk": "Lack of a clear appeals process for automated rejections may lead to regulatory complaints and loss of business.",
+    "risk_type": "business",
+    "likelihood": 2,
+    "impact": 3,
+    "mitigation": "Provide a clear, documented path for manual review requests.",
+    "confidence": 0.9
+   },
+   {
+    "id": "c68cf3dd-414b-41be-a04a-487f388aaa4c",
+    "requirement_id": "0c1bbe23-8025-4fdf-808d-72ef1589352f",
+    "risk": "Premature deletion of records leads to inability to provide evidence during regulatory audits.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 4,
+    "mitigation": "Implement automated retention policies with legal hold overrides.",
+    "confidence": 0.9
+   },
+   {
+    "id": "85e9ea83-1c77-4dfe-a94d-f3dbe96e2a4e",
+    "requirement_id": "72a6e808-c25c-41e1-855e-42f51d5fda8b",
+    "risk": "Hardcoded thresholds prevent rapid response to changing risk appetites or regulatory requirements.",
+    "risk_type": "operational",
+    "likelihood": 3,
+    "impact": 3,
+    "mitigation": "Develop a secure configuration management interface for risk parameters.",
+    "confidence": 0.7
+   },
+   {
+    "id": "fe7cf5da-e14e-4e42-b560-8d7b8058d985",
+    "requirement_id": "a8ca8f33-589c-457a-9f32-520cd0452c7d",
+    "risk": "Accidental disclosure of suspicious activity reports (SARs) to the merchant constitutes 'tipping off', a criminal offense.",
+    "risk_type": "compliance",
+    "likelihood": 3,
+    "impact": 5,
+    "mitigation": "Restrict access to SAR reporting tools to authorized compliance staff only.",
+    "confidence": 0.8
+   },
+   {
+    "id": "262e10de-e4e5-4ffa-b425-658f921a81bb",
+    "requirement_id": "69aed858-f69f-4676-8533-63733a2f351a",
+    "risk": "Incompatible deployment pipelines could lead to failed updates or system instability.",
+    "risk_type": "technical",
+    "likelihood": 3,
+    "impact": 3,
+    "mitigation": "Perform a technical audit of the CI/CD pipeline against KYC system requirements.",
+    "confidence": 0.6
+   },
+   {
+    "id": "d329f12d-40fa-4988-8465-80145a1d4508",
+    "requirement_id": "91d4b88a-896e-4a32-b687-d53eb3ed2822",
+    "risk": "Unreliable API integrations lead to system downtime and failure to perform mandatory checks.",
+    "risk_type": "technical",
+    "likelihood": 3,
+    "impact": 4,
+    "mitigation": "Implement robust error handling and circuit breakers for all external API calls.",
+    "confidence": 0.7
+   },
+   {
+    "id": "740b2089-d46b-4bc0-973c-4abf4e40d6ef",
+    "requirement_id": "77a99c90-5af6-4f4c-ba59-f89720937d8f",
+    "risk": "Data loss during vendor outages results in incomplete KYC records and compliance gaps.",
+    "risk_type": "operational",
+    "likelihood": 3,
+    "impact": 4,
+    "mitigation": "Implement a persistent message queue to retry failed vendor requests.",
+    "confidence": 0.7
+   },
+   {
+    "id": "3d738652-a0b7-4d69-a0b8-006f558d1397",
+    "requirement_id": "7a046f56-e429-41f3-b91b-95224264e599",
+    "risk": "Non-compliant data processing leads to severe GDPR fines and loss of customer trust.",
+    "risk_type": "compliance",
+    "likelihood": 3,
+    "impact": 5,
+    "mitigation": "Conduct a comprehensive data mapping and privacy impact assessment.",
+    "confidence": 0.8
+   },
+   {
+    "id": "f3763f16-a32c-41ec-a3a2-19e7c73e475a",
+    "requirement_id": "3187b759-1487-4a1c-95cc-d7521db5dca8",
+    "risk": "Failure to perform a DPIA leaves the organization vulnerable to regulatory scrutiny and privacy risks.",
+    "risk_type": "compliance",
+    "likelihood": 3,
+    "impact": 4,
+    "mitigation": "Mandate a DPIA as a prerequisite for system deployment.",
+    "confidence": 0.9
+   },
+   {
+    "id": "1796f5c2-8866-48f4-82d9-a77159bf2b94",
+    "requirement_id": "052b66b2-de42-4ada-bdaa-bf4b07fb9103",
+    "risk": "System failure during peak load leads to business disruption and potential loss of revenue.",
+    "risk_type": "technical",
+    "likelihood": 3,
+    "impact": 3,
+    "mitigation": "Conduct load testing to validate capacity against the 500/hr requirement.",
+    "confidence": 0.7
+   },
+   {
+    "id": "0020d8f4-7240-4d30-80a2-557fcc4f183a",
+    "requirement_id": "359dc837-9af4-4c27-954c-114e6790f583",
+    "risk": "Unplanned downtime prevents critical KYC checks, halting business operations.",
+    "risk_type": "operational",
+    "likelihood": 3,
+    "impact": 3,
+    "mitigation": "Implement high-availability architecture with redundant components.",
+    "confidence": 0.7
+   },
+   {
+    "id": "e8bf31f8-c950-4c76-b6b7-759c66c2feb9",
+    "requirement_id": "7d4688e3-1821-462c-97d0-6acc1537bc9c",
+    "risk": "Insufficient audit logs prevent reconstruction of decisions, leading to audit failure.",
+    "risk_type": "compliance",
+    "likelihood": 3,
+    "impact": 4,
+    "mitigation": "Implement centralized, immutable logging for all system decisions.",
+    "confidence": 0.8
+   },
+   {
+    "id": "283cbb9a-8b43-4890-940a-e1bbe6e8f5fa",
+    "requirement_id": "48d2e64f-45f1-42c4-a76b-24f6fbc5a0eb",
+    "risk": "Unauthorized access to identity documents goes undetected without granular access logs.",
+    "risk_type": "security",
+    "likelihood": 3,
+    "impact": 4,
+    "mitigation": "Implement detailed audit trails for all document access events.",
+    "confidence": 0.8
+   },
+   {
+    "id": "c83988fe-fdd6-410d-a8f4-2c5181d39ce4",
+    "requirement_id": "22f88042-f393-49bf-b565-96f2b9fd885c",
+    "risk": "Failure to obtain valid consent leads to illegal data processing and regulatory penalties.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Implement a mandatory, timestamped consent capture mechanism in the UI.",
+    "confidence": 0.9
+   },
+   {
+    "id": "7d4cbec4-4b2c-48b2-a3c6-0091d1b5ac98",
+    "requirement_id": "a5189a02-10e9-4b74-aa1a-f94d17f83094",
+    "risk": "Weak identity verification allows fraudulent actors to bypass onboarding controls.",
+    "risk_type": "security",
+    "likelihood": 3,
+    "impact": 5,
+    "mitigation": "Use certified liveness detection and biometric matching vendors.",
+    "confidence": 0.9
+   },
+   {
+    "id": "cff4dd28-1870-4d00-9fdb-88c728c1f002",
+    "requirement_id": "116846f4-3e12-4a07-b0a9-da19e2094b02",
+    "risk": "Data exposure due to lack of encryption leads to massive data breach and regulatory fines.",
+    "risk_type": "security",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Enforce AES-256 encryption at rest and TLS 1.3 in transit.",
+    "confidence": 0.9
+   },
+   {
+    "id": "3d3e3f36-a914-4399-b03e-1205657c26fb",
+    "requirement_id": "8127f46b-b064-4ecd-a931-7789354648c7",
+    "risk": "Excessive user privileges lead to internal data theft or unauthorized document access.",
+    "risk_type": "security",
+    "likelihood": 3,
+    "impact": 4,
+    "mitigation": "Implement Role-Based Access Control (RBAC) and regular access reviews.",
+    "confidence": 0.9
+   },
+   {
+    "id": "e9010541-545e-4d9b-8352-45fdbb5b29db",
+    "requirement_id": "bef13742-1d07-4f6a-ac1a-7d04ddd24d8d",
+    "risk": "Delayed incident notification leads to increased regulatory penalties under GDPR.",
+    "risk_type": "compliance",
+    "likelihood": 3,
+    "impact": 5,
+    "mitigation": "Establish and test an incident response plan with clear notification timelines.",
+    "confidence": 0.9
+   },
+   {
+    "id": "7cf9c4d0-1262-43d7-a43a-44316d087d1f",
+    "requirement_id": "8b58a3a8-2300-43d4-bae8-b5cf9d1b63ae",
+    "risk": "Inability to fulfill data subject requests leads to non-compliance with GDPR rights.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 4,
+    "mitigation": "Develop automated workflows for data access and erasure requests.",
+    "confidence": 0.9
+   },
+   {
+    "id": "a4eb5bde-5d8e-416b-9005-de1a5e72910a",
+    "requirement_id": "c0e81b8a-7de0-4e5f-94c8-3b43e964637d",
+    "risk": "Tampered documents accepted as valid, leading to successful identity fraud.",
+    "risk_type": "security",
+    "likelihood": 3,
+    "impact": 5,
+    "mitigation": "Use automated document forensic analysis tools.",
+    "confidence": 0.9
+   },
+   {
+    "id": "326aa774-ad81-4a22-9435-834f455e273d",
+    "requirement_id": "d600f138-ca79-4595-8cbc-066dbfa728b1",
+    "risk": "Compromised API tokens allow attackers to intercept or manipulate verification data.",
+    "risk_type": "security",
+    "likelihood": 3,
+    "impact": 4,
+    "mitigation": "Enforce short-lived tokens and secure secret management.",
+    "confidence": 0.9
+   },
+   {
+    "id": "ac41f685-086a-49bb-9c3e-ca0a31d2cd30",
+    "requirement_id": "484e117c-f941-40c8-8af0-f420a6e3c112",
+    "risk": "Malicious files uploaded to the system compromise internal infrastructure.",
+    "risk_type": "security",
+    "likelihood": 3,
+    "impact": 5,
+    "mitigation": "Integrate automated malware scanning into the file upload pipeline.",
+    "confidence": 0.9
+   },
+   {
+    "id": "eff35dbd-d175-4bdd-b1ae-821727643e0f",
+    "requirement_id": "c275c257-4dad-4a47-99f2-046fee424cc0",
+    "risk": "Unauthorized modification of screening thresholds allows high-risk entities to bypass controls.",
+    "risk_type": "security",
+    "likelihood": 3,
+    "impact": 5,
+    "mitigation": "Implement multi-party authorization for all configuration changes.",
+    "confidence": 0.9
+   },
+   {
+    "id": "39434115-5f9f-4072-9801-b152a314f3e1",
+    "requirement_id": "ad93d079-061d-4e42-b795-eb7519b0aaea",
+    "risk": "Failure to purge data leads to excessive data retention, violating GDPR minimization principles.",
+    "risk_type": "compliance",
+    "likelihood": 2,
+    "impact": 3,
+    "mitigation": "Automate data lifecycle management with verified deletion logs.",
+    "confidence": 0.9
+   },
+   {
+    "id": "68d4eb4b-c9b1-40a3-8057-b717852ef7a0",
+    "requirement_id": "a33175f5-4245-40e1-a563-4d3e38574248",
+    "risk": "Credential theft leads to unauthorized access to sensitive KYC data.",
+    "risk_type": "security",
+    "likelihood": 3,
+    "impact": 5,
+    "mitigation": "Mandate phishing-resistant MFA for all internal users.",
+    "confidence": 0.9
+   },
+   {
+    "id": "302e0f00-ce32-4c98-b68e-63c153eaa5e1",
+    "requirement_id": "8a1e2268-d7d0-4879-a780-2eb34c633f91",
+    "risk": "Lack of integrity in decision logs allows for tampering with audit trails.",
+    "risk_type": "security",
+    "likelihood": 2,
+    "impact": 5,
+    "mitigation": "Use digital signatures for all decision logs to ensure non-repudiation.",
+    "confidence": 0.9
+   },
+   {
+    "id": "40d044d9-9583-41be-bf35-c81e61002c32",
+    "requirement_id": "8bc46029-8a5d-48e2-aec2-90e72a30162f",
+    "risk": "Brute-force attacks on upload endpoints lead to service degradation or data scraping.",
+    "risk_type": "security",
+    "likelihood": 3,
+    "impact": 3,
+    "mitigation": "Implement rate limiting and IP-based blocking at the WAF level.",
+    "confidence": 0.9
+   }
+  ],
+  "sdlc": {
+   "signature": "",
+   "factors": [
+    {
+     "key": "stability",
+     "label": "Requirement stability",
+     "score": 3,
+     "evidence": "20 of 26 requirements are still vague, 1 open conflict(s), 0 hedging phrase(s) and 0 finality phrase(s) (final, approved, signed off) in the inputs."
+    },
+    {
+     "key": "regulatory",
+     "label": "Regulatory criticality",
+     "score": 4,
+     "evidence": "19 of 26 requirements map to regulations; 19 mandatory controls apply; 0 uncovered."
+    },
+    {
+     "key": "security",
+     "label": "Security risk",
+     "score": 3,
+     "evidence": "38% of requirements are security/privacy; 10 rated high risk."
+    },
+    {
+     "key": "complexity",
+     "label": "Project complexity",
+     "score": 3,
+     "evidence": "26 requirements, 8% integration-related, 1 conflict(s)."
+    },
+    {
+     "key": "size",
+     "label": "System size",
+     "score": 4,
+     "evidence": "26 stated requirements."
+    },
+    {
+     "key": "legacy",
+     "label": "Legacy-system dependence",
+     "score": 4,
+     "evidence": "Mentions: integrate with, vendor, api."
+    },
+    {
+     "key": "change",
+     "label": "Expected frequency of change",
+     "score": 3,
+     "evidence": "4 change/iteration phrase(s); instability index 0.54."
+    },
+    {
+     "key": "continuous_delivery",
+     "label": "Need for continuous delivery",
+     "score": 3,
+     "evidence": "Mentions: continuous, deploy."
+    },
+    {
+     "key": "stakeholder_availability",
+     "label": "Stakeholder availability",
+     "score": 3,
+     "evidence": "No statement about stakeholder availability; assumed moderate."
+    },
+    {
+     "key": "documentation",
+     "label": "Documentation and testing demand",
+     "score": 3,
+     "evidence": "Regulatory criticality 4/5 and 8% audit/reporting requirements demand traceable documentation."
+    },
+    {
+     "key": "schedule",
+     "label": "Budget and schedule pressure",
+     "score": 3,
+     "evidence": "Mentions: deadline, weeks."
+    },
+    {
+     "key": "verification",
+     "label": "Need for formal verification",
+     "score": 3,
+     "evidence": "Derived from regulatory criticality (4/5) and security risk (3/5); verification terms: validation."
+    },
+    {
+     "key": "failure_consequence",
+     "label": "Consequence of failure",
+     "score": 3,
+     "evidence": "10 high-risk requirement(s); average impact 4.2/5."
+    },
+    {
+     "key": "technical_uncertainty",
+     "label": "Technical uncertainty",
+     "score": 2,
+     "evidence": "0 hedging phrase(s), 77% vague requirements; mentions: none."
+    }
+   ],
+   "ranking": [
+    {
+     "model": "Agile-V hybrid",
+     "score": 71.0,
+     "reasons": [
+      "Fits: Requirement stability is 3/5 (ideal 3).",
+      "Fits: System size is 4/5 (ideal 4).",
+      "Fits: Need for continuous delivery is 3/5 (ideal 3)."
+     ]
+    },
+    {
+     "model": "Agile-DevSecOps hybrid",
+     "score": 69.7,
+     "reasons": [
+      "Fits: Requirement stability is 3/5 (ideal 3).",
+      "Fits: Regulatory criticality is 4/5 (ideal 4).",
+      "Fits: System size is 4/5 (ideal 4).",
+      "Tension: Security risk is 3/5 (ideal 5)."
+     ]
+    },
+    {
+     "model": "DevSecOps",
+     "score": 65.0,
+     "reasons": [
+      "Fits: Requirement stability is 3/5 (ideal 3).",
+      "Fits: Project complexity is 3/5 (ideal 3).",
+      "Fits: System size is 4/5 (ideal 4).",
+      "Tension: Security risk is 3/5 (ideal 5).",
+      "Tension: Need for continuous delivery is 3/5 (ideal 5)."
+     ]
+    },
+    {
+     "model": "Waterfall",
+     "score": 55.7,
+     "reasons": [
+      "Fits: Regulatory criticality is 4/5 (ideal 4).",
+      "Fits: Security risk is 3/5 (ideal 3).",
+      "Fits: Need for formal verification is 3/5 (ideal 3).",
+      "Tension: Need for continuous delivery is 3/5 (ideal 1).",
+      "Tension: Documentation and testing demand is 3/5 (ideal 5)."
+     ]
+    },
+    {
+     "model": "V-Model",
+     "score": 54.9,
+     "reasons": [
+      "Fits: Project complexity is 3/5 (ideal 3).",
+      "Fits: Stakeholder availability is 3/5 (ideal 3).",
+      "Fits: Technical uncertainty is 2/5 (ideal 2).",
+      "Tension: Need for continuous delivery is 3/5 (ideal 1).",
+      "Tension: Consequence of failure is 3/5 (ideal 5)."
+     ]
+    },
+    {
+     "model": "Spiral",
+     "score": 53.9,
+     "reasons": [
+      "Fits: System size is 4/5 (ideal 4).",
+      "Fits: Expected frequency of change is 3/5 (ideal 3).",
+      "Fits: Documentation and testing demand is 3/5 (ideal 3).",
+      "Tension: Technical uncertainty is 2/5 (ideal 5).",
+      "Tension: Requirement stability is 3/5 (ideal 1)."
+     ]
+    },
+    {
+     "model": "Agile (Scrum/Kanban)",
+     "score": 46.2,
+     "reasons": [
+      "Fits: Project complexity is 3/5 (ideal 3).",
+      "Fits: Consequence of failure is 3/5 (ideal 2).",
+      "Fits: Requirement stability is 3/5 (ideal 2).",
+      "Tension: Legacy-system dependence is 4/5 (ideal 2).",
+      "Tension: Need for formal verification is 3/5 (ideal 1)."
+     ]
+    }
+   ],
+   "recommended": "Agile-V hybrid",
+   "chosen": "Agile-V hybrid",
+   "narrative": {
+    "explanation": "The Agile-V hybrid model is the best fit because it balances the need for structured, traceable documentation required by the high regulatory criticality (4/5) and security risks (3/5) with the flexibility needed for vague requirements (3/5 stability). While the project faces significant legacy integration dependencies (4/5), the hybrid approach allows for iterative development cycles that accommodate the 77% vague requirement rate. The runner-up, Agile-DevSecOps, offers stronger continuous deployment capabilities but may lack the formal verification rigor necessary for your specific audit and compliance demands.",
+    "tradeoffs": [
+     "Increased overhead due to maintaining both agile velocity and formal V-model documentation.",
+     "Potential friction between rapid development cycles and the need for rigorous regulatory sign-offs.",
+     "Complexity in managing synchronization points between the agile development team and the verification team."
+    ],
+    "would_change_if": [
+     "If regulatory requirements are finalized and documentation demands decrease, a pure Agile-DevSecOps model would become more efficient.",
+     "If legacy system integration proves more volatile than expected, a shift toward a more rigid Waterfall model may be required to ensure system stability."
+    ]
+   },
+   "workflow": [
+    {
+     "name": "Requirements and compliance baseline",
+     "goal": "Turn stakeholder input into an approved, traceable requirement baseline. Establish a regulated baseline that increments extend.",
+     "activities": [
+      "Resolve 1 open conflict(s) between stakeholder requirements",
+      "Resolve or consciously accept 28 open clarification question(s)",
+      "Interview remaining stakeholders and resolve open clarification questions",
+      "Classify and prioritise requirements; resolve conflicts between stakeholders",
+      "Map each requirement to regulations and mandatory controls",
+      "Agree customer-risk categories and onboarding journeys (retail, entity, remote)"
+     ],
+     "roles": [
+      "Business analyst",
+      "Product owner",
+      "Compliance officer",
+      "Security architect"
+     ],
+     "deliverables": [
+      "Approved requirement baseline",
+      "Compliance-control matrix",
+      "Requirements traceability matrix",
+      "Risk register v1",
+      "Mitigation plan for: Vague definition of 'low-risk' leads to inconsistent automated approva; Insecure document upload portal could lead to unauthorized data access; Improper handling of sensitive UBO identity documents leads to GDPR vi"
+     ],
+     "security_activities": [
+      "Data classification of KYC data",
+      "Privacy impact assessment scoping",
+      "Initial threat model"
+     ],
+     "testing": [
+      "Requirement review against acceptance-criteria quality checklist"
+     ],
+     "compliance_checkpoints": [
+      "Compliance officer confirms regulatory mappings",
+      "Legal review of high-impact interpretations",
+      "Confirm applicable jurisdictions: EU, GLOBAL"
+     ],
+     "entry_criteria": [
+      "Stakeholder inputs collected and PII-masked"
+     ],
+     "exit_criteria": [
+      "No unresolved conflicts or blocking questions",
+      "Baseline approved"
+     ],
+     "approval_gate": "Requirements baseline approval (project manager, architect, security, compliance)",
+     "traceability": "Every deliverable links back to requirement ids and their source statements."
+    },
+    {
+     "name": "Architecture runway",
+     "goal": "Design the regulated core once, then evolve it.",
+     "activities": [
+      "Architecture and data-protection design",
+      "Verification strategy per level"
+     ],
+     "roles": [
+      "Architect",
+      "Security architect"
+     ],
+     "deliverables": [
+      "Architecture",
+      "Verification strategy"
+     ],
+     "security_activities": [
+      "Threat model"
+     ],
+     "testing": [
+      "Test strategy"
+     ],
+     "compliance_checkpoints": [
+      "Privacy-by-design review"
+     ],
+     "entry_criteria": [
+      "Baseline approved"
+     ],
+     "exit_criteria": [
+      "Architecture approved"
+     ],
+     "approval_gate": "Architecture approval",
+     "traceability": "Every deliverable links back to requirement ids and their source statements."
+    },
+    {
+     "name": "Increment cycle (repeat)",
+     "goal": "Deliver increments, verifying each against its requirements (a V per increment).",
+     "activities": [
+      "Plan increment from backlog",
+      "Design, build and unit test",
+      "Integration and system verification of the increment",
+      "Stakeholder review"
+     ],
+     "roles": [
+      "Scrum team",
+      "QA",
+      "Compliance officer"
+     ],
+     "deliverables": [
+      "Verified increment",
+      "Updated traceability and compliance matrix"
+     ],
+     "security_activities": [
+      "Security testing every increment"
+     ],
+     "testing": [
+      "Unit, integration and system tests per increment"
+     ],
+     "compliance_checkpoints": [
+      "Compliance sign-off on each increment's controls"
+     ],
+     "entry_criteria": [
+      "Increment planned"
+     ],
+     "exit_criteria": [
+      "Increment verified and accepted"
+     ],
+     "approval_gate": "Increment acceptance",
+     "traceability": "Every deliverable links back to requirement ids and their source statements."
+    },
+    {
+     "name": "Validation and release",
+     "goal": "Validate the whole and release.",
+     "activities": [
+      "Full system validation",
+      "Penetration and presentation-attack tests",
+      "Release"
+     ],
+     "roles": [
+      "QA lead",
+      "Security",
+      "Compliance officer"
+     ],
+     "deliverables": [
+      "Validation report",
+      "Release record"
+     ],
+     "security_activities": [
+      "Penetration test"
+     ],
+     "testing": [
+      "End-to-end validation"
+     ],
+     "compliance_checkpoints": [
+      "Final compliance approval"
+     ],
+     "entry_criteria": [
+      "All planned increments verified"
+     ],
+     "exit_criteria": [
+      "Validated"
+     ],
+     "approval_gate": "Release approval",
+     "traceability": "Every deliverable links back to requirement ids and their source statements."
+    },
+    {
+     "name": "Operate and change",
+     "goal": "Operate and process change under control.",
+     "activities": [
+      "Monitor",
+      "Handle regulatory change as new increments"
+     ],
+     "roles": [
+      "Operations",
+      "Product owner"
+     ],
+     "deliverables": [
+      "Runbook",
+      "Change log"
+     ],
+     "security_activities": [
+      "Vulnerability management"
+     ],
+     "testing": [
+      "Regression"
+     ],
+     "compliance_checkpoints": [
+      "Change approval for baselined requirements",
+      "No real customer data in non-production environments"
+     ],
+     "entry_criteria": [
+      "Live"
+     ],
+     "exit_criteria": [
+      "Stable"
+     ],
+     "approval_gate": "Change approval",
+     "traceability": "Every deliverable links back to requirement ids and their source statements."
+    }
+   ]
+  },
+  "validation": {
+   "gates": [
+    {
+     "id": "traceability",
+     "title": "Every stated requirement traces to a source quote",
+     "passed": true,
+     "detail": "All traceable."
+    },
+    {
+     "id": "criteria",
+     "title": "Every requirement has acceptance criteria",
+     "passed": true,
+     "detail": "All have criteria."
+    },
+    {
+     "id": "clarity",
+     "title": "Weak requirements are answered or consciously skipped",
+     "passed": false,
+     "detail": "20 still have open questions"
+    },
+    {
+     "id": "conflicts",
+     "title": "No unresolved stakeholder conflicts",
+     "passed": false,
+     "detail": "1 open"
+    },
+    {
+     "id": "controls",
+     "title": "No mandatory control is left uncovered",
+     "passed": true,
+     "detail": "All applicable controls have a requirement."
+    }
+   ],
+   "metrics": {
+    "requirements": 40,
+    "stated": 26,
+    "derived": 14,
+    "weak": 20,
+    "open_questions": 28,
+    "open_conflicts": 1,
+    "completeness_pct": 100.0,
+    "traceability_pct": 100.0,
+    "control_coverage_pct": 84.2,
+    "controls_partial": 3,
+    "controls_gap": 0,
+    "needs_legal_review": 10,
+    "avg_confidence": 0.78,
+    "hallucinations_dropped": 3,
+    "baseline_ready": false
+   }
+  },
+  "last_run": {
+   "at": "2026-11-26T20:05:53+00:00",
+   "kind": "analyse",
+   "seconds": 252.0,
+   "llm_calls": 12,
+   "model": "gemini-3.1-flash-lite"
+  }
+ }
+}

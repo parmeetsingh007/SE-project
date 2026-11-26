@@ -1,0 +1,5 @@
+Interview with Lukas Weber (Head of Sales)
+
+We lose merchants because onboarding takes days. Competitors approve small merchants in under an hour. I want automated approval for low-risk merchants within one hour and a human only for the rest. We release product changes every two weeks and want onboarding to keep up with that pace.
+
+Merchants should upload their company registration and the IDs of the owners from a web portal, and they should be able to see where they are in the process. Sales also needs a dashboard of applications stuck in review.

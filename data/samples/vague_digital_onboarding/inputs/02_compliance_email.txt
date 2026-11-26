@@ -1,0 +1,12 @@
+From: Arjun Rao (Compliance Officer)
+To: Digital Banking Project
+Subject: KYC points for the new app
+
+Team,
+
+Whatever we build must obviously follow the RBI KYC rules, and we must keep customer records for the required period. I think it is five years but please don't quote me. We also need some kind of consent from the customer. Screening against sanctions lists is needed too, though I haven't checked how the vendor does it.
+
+I am not sure whether video KYC counts for these accounts or whether Aadhaar OTP is enough. The guidance seems to be moving and I can't give you a final answer yet. Let's keep the design flexible so it can change if the regulator updates anything.
+
+Regards,
+Arjun

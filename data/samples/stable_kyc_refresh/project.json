@@ -1,0 +1,7 @@
+{
+  "name": "Periodic KYC refresh programme",
+  "description": "A bank must refresh KYC for existing customers on the regulator's schedule. Requirements are firm, regulated and unlikely to change. Good for showing a plan-driven recommendation (V-Model or Waterfall).",
+  "jurisdictions": ["IN", "GLOBAL"],
+  "source_types": {"01_policy_extract.txt": "policy", "02_business_requirements.txt": "requirements doc"},
+  "roles": {"01_policy_extract.txt": "Compliance officer", "02_business_requirements.txt": "Business analyst"}
+}

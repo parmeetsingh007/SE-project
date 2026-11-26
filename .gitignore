@@ -10,3 +10,6 @@ docs/generated/*
 !.claude/launch.json
 .pytest_cache/
 chroma_db/
+
+*.db-wal
+*.db-shm

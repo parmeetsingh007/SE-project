@@ -17,10 +17,15 @@ from pathlib import Path
 
 import pytest
 
-_TEST_DB_PATH = Path(__file__).resolve().parent.parent / "test_sdlc_requirements.db"
+_TEST_DB_PATH = Path(__file__).resolve().parent.parent / "test_kycompass.db"
 _TEST_DB_PATH.unlink(missing_ok=True)
 
+for _suffix in ("-wal", "-shm"):
+    Path(str(_TEST_DB_PATH) + _suffix).unlink(missing_ok=True)
+
 os.environ["DATABASE_URL"] = f"sqlite:///{_TEST_DB_PATH}"
+# Tests never need the embedding model: lexical retrieval is deterministic and offline.
+os.environ["KB_BACKEND"] = "lexical"
 
 
 @pytest.fixture(autouse=True)

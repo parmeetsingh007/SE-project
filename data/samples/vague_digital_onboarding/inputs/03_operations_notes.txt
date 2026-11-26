@@ -1,0 +1,8 @@
+Operations meeting notes (Neha Iyer, Operations Lead)
+
+- Today, branch staff check documents by eye. It is slow and some mistakes get through.
+- New flow should reduce manual work. We don't know yet how many cases will still need a person; maybe 10 or 20 percent, hard to say.
+- Support staff will need to see the customer's documents sometimes. Unclear who should be allowed to.
+- Our core banking system is old. It can probably take new accounts through an API but nobody has tested that.
+- Customers who abandon halfway are a problem. We'd like them to be able to resume somehow.
+- Budget is limited and leadership wants to see something working by next quarter.

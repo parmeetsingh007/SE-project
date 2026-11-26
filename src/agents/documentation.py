@@ -1,114 +1,85 @@
-"""Generates SRS.md, user_stories.md, and traceability_matrix.csv.
+"""Generates user stories and use cases (the narrative artefacts) in one call.
 
-Only the prose (executive summary, user stories) comes from Gemini, and it's
-grounded strictly in the given requirements/characteristics — no invented
-facts. See doc_renderers.py for the deterministic file rendering.
+The SRS, matrices and registers are rendered deterministically in src/artefacts so a
+formal deliverable never depends on a model paraphrasing a requirement or citation.
 """
 
 from __future__ import annotations
 
-import json
-from pathlib import Path
-
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
-from src.agents.doc_renderers import write_srs, write_traceability_csv, write_user_stories
+from src.agents.common import DOMAIN, JSON_ONLY, dumps
 from src.agents.llm_client import call_agent_json
-from src.agents.sdlc_selection import SDLCRecommendation, summarize_requirements
 from src.models.requirement import Requirement
 
-SUMMARY_PROMPT = """\
-You are drafting the executive summary of a Software Requirements Specification \
-for a bank's payment-processing feature. You will be given aggregate \
-characteristics of the gathered requirements (counts, category/risk distribution). \
-Write a 2-4 sentence summary grounded strictly in these numbers — do not invent \
-facts, deadlines, or figures not given to you.
+MAX_USE_CASES = 6
 
-Respond with ONLY valid JSON: {"summary": str}
-"""
+SYSTEM_PROMPT = f"""\
+You are the documentation agent for {DOMAIN}. You receive a JSON list of requirements with \
+"ref", "statement", "justification" and "acceptance_criteria".
 
-STORIES_PROMPT = """\
-You are converting system-level requirements into user stories for a bank's \
-payment-processing feature. You will be given a list of requirements, each with \
-an "id", "statement", and optional "business_justification".
+1. USER STORIES: for each requirement write one story "As a <role>, I want <capability>, \
+so that <benefit>" from the point of view of whoever benefits (the customer, an onboarding \
+agent, a compliance officer, a fraud analyst) - not the stakeholder who asked. Stay strictly \
+within the statement; do not add functionality. Keep any "[TBD: ...]" gap visible.
 
-For each one, write a user story in "As a <role>, I want <capability>, so that \
-<benefit>" form, from the perspective of whoever benefits (often the paying \
-customer, sometimes a fraud analyst or compliance reviewer) — not the stakeholder \
-who dictated it. Ground the capability and benefit strictly in the given \
-statement/justification; do not invent new functionality.
+2. USE CASES: write up to {MAX_USE_CASES} use cases covering the most important end-to-end \
+flows. Each has a name, a primary actor, preconditions, a numbered main flow, alternate/failure \
+flows, postconditions and the requirement refs it realises.
 
-Respond with ONLY valid JSON matching this schema, no prose before or after:
-{"stories": [{"requirement_id": str, "as_a": str, "i_want": str, "so_that": str}]}
+{JSON_ONLY}
+{{"stories": [{{"ref": str, "as_a": str, "i_want": str, "so_that": str}}],
+"use_cases": [{{"name": str, "actor": str, "pre": [str], "main": [str], "alt": [str],
+"post": [str], "refs": [str]}}]}}
 """
 
 
-class ExecutiveSummary(BaseModel):
-    summary: str
-
-
-class UserStory(BaseModel):
-    requirement_id: str
+class Story(BaseModel):
+    ref: str
     as_a: str
     i_want: str
     so_that: str
 
 
-class UserStoriesOutput(BaseModel):
-    stories: list[UserStory]
+class UseCase(BaseModel):
+    name: str
+    actor: str
+    pre: list[str] = Field(default_factory=list)
+    main: list[str] = Field(default_factory=list)
+    alt: list[str] = Field(default_factory=list)
+    post: list[str] = Field(default_factory=list)
+    refs: list[str] = Field(default_factory=list)
 
 
 class DocumentationOutput(BaseModel):
-    srs_path: str
-    user_stories_path: str
-    traceability_csv_path: str
+    stories: list[Story] = Field(default_factory=list)
+    use_cases: list[UseCase] = Field(default_factory=list)
 
 
 class DocumentationAgent:
-    """Writes the SRS, user stories, and traceability matrix to docs/generated/."""
-
-    def __init__(self, output_dir: str = "docs/generated") -> None:
-        self.output_dir = Path(output_dir)
-
     def run(
-        self,
-        requirements: list[Requirement],
-        sdlc_recommendations: list[SDLCRecommendation],
-        db_session: Session | None = None,
+        self, requirements: list[Requirement], db_session: Session | None = None
     ) -> DocumentationOutput:
-        characteristics = summarize_requirements(requirements)
-        summary = call_agent_json(
-            agent_name="documentation_summary",
-            system_prompt=SUMMARY_PROMPT,
-            user_content=json.dumps(characteristics),
-            output_model=ExecutiveSummary,
-            db_session=db_session,
-        ).summary
-
         payload = [
             {
-                "id": r.id,
+                "ref": r.ref,
                 "statement": r.statement,
-                "business_justification": r.business_justification,
+                "justification": r.business_justification,
+                "acceptance_criteria": r.acceptance_criteria,
             }
             for r in requirements
         ]
-        stories = call_agent_json(
-            agent_name="documentation_user_stories",
-            system_prompt=STORIES_PROMPT,
-            user_content=json.dumps(payload),
-            output_model=UserStoriesOutput,
+        output = call_agent_json(
+            agent_name="documentation",
+            system_prompt=SYSTEM_PROMPT,
+            user_content=dumps(payload),
+            output_model=DocumentationOutput,
             db_session=db_session,
-        ).stories
-
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        srs_path = write_srs(self.output_dir, requirements, sdlc_recommendations, summary)
-        stories_path = write_user_stories(self.output_dir, stories)
-        csv_path = write_traceability_csv(self.output_dir, requirements)
-
-        return DocumentationOutput(
-            srs_path=str(srs_path),
-            user_stories_path=str(stories_path),
-            traceability_csv_path=str(csv_path),
         )
+        known = {r.ref for r in requirements}
+        output.stories = [s for s in output.stories if s.ref in known]
+        for use_case in output.use_cases:
+            use_case.refs = [ref for ref in use_case.refs if ref in known]
+        output.use_cases = output.use_cases[:MAX_USE_CASES]
+        return output

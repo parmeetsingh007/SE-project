@@ -1,0 +1,11 @@
+Interviewer: What do you want to build?
+
+Priya Menon (Product Manager): We want people to open an account on their phone, quickly, without visiting a branch. Something like a few minutes, maybe less. I'm not sure what the target should be yet. It has to feel easy and secure, and we shouldn't ask for too much. You can reach me on priya.menon@examplebank.in or +91 98765 43210 if you need more.
+
+Interviewer: How do you verify who they are?
+
+Priya Menon: Probably a selfie or a video call, we haven't decided. Maybe Aadhaar, maybe other documents. Risky customers should get extra checks, but I don't know how we decide who is risky. We'll figure that out with the fraud team later. If verification fails we should do something sensible, maybe let them try again, maybe send them to a person.
+
+Interviewer: Timeline?
+
+Priya Menon: We'd like a pilot soon, and we'll learn from it. The rules will probably change as we go, so let's not lock too much down. We need it live before the festival season if possible.

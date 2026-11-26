@@ -1,0 +1,7 @@
+Platform engineering notes (Sven Larsen)
+
+- We deploy continuously to production with automated tests and security scans. Onboarding should use the same pipeline.
+- Document checks and screening will use external vendors through APIs. Vendor outages must not lose applications.
+- Personal data of beneficial owners is processed under GDPR. A data protection impact assessment is needed because we process identity documents at scale.
+- The service must handle 500 onboarding applications per hour at peak with 99.9 percent availability.
+- Every decision and every access to identity documents must be logged for audit.

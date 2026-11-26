@@ -1,0 +1,12 @@
+Business requirements document (final), KYC Refresh Programme, owner: Meera Shah (Business Analyst)
+
+The programme covers all 2.4 million existing retail customers over 24 months. Scope, policy and the regulator's schedule are fixed and have been signed off by the steering committee.
+
+BR-1: The system shall calculate each customer's next KYC due date from the risk category.
+BR-2: The system shall send reminders at 30 days and 7 days before the due date.
+BR-3: The system shall let a customer submit a self-declaration through the mobile app and net banking.
+BR-4: The system shall support address-change proof upload and verification by an operations officer within 2 business days.
+BR-5: The system shall submit refreshed records to the central KYC registry within 10 days.
+BR-6: The system shall record every account freeze together with the approving branch manager.
+BR-7: The system shall produce a monthly compliance report of due, completed and overdue refreshes.
+The existing core banking and CRM platforms remain unchanged and are accessed through the approved integration layer.

@@ -1,0 +1,7 @@
+{
+  "name": "Digital savings account onboarding (early idea)",
+  "description": "A bank wants customers to open a savings account from the mobile app. Stakeholders have only rough ideas so far. Good for showing vague input, clarification questions and a Spiral recommendation.",
+  "jurisdictions": ["IN", "GLOBAL"],
+  "source_types": {"01_product_manager_interview.txt": "interview", "02_compliance_email.txt": "email", "03_operations_notes.txt": "meeting notes"},
+  "roles": {"01_product_manager_interview.txt": "Product manager", "02_compliance_email.txt": "Compliance officer", "03_operations_notes.txt": "Operations lead"}
+}

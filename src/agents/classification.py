@@ -1,55 +1,92 @@
-"""Assigns multi-label category tags (functional, security, compliance, ...)
-to already-extracted requirements."""
+"""Multi-label classification across the 13 requirement dimensions, plus a priority."""
 
 from __future__ import annotations
 
-import json
-
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
+from src.agents.common import DOMAIN, JSON_ONLY, dumps
 from src.agents.llm_client import call_agent_json
-from src.models.requirement import Requirement, RequirementCategory
+from src.models.requirement import Category, Priority, Requirement
 
-SYSTEM_PROMPT = """\
-You are the classification agent in a requirements-gathering pipeline for a bank's \
-payment-processing feature. You will be given a JSON list of requirements, each with \
-an "id" and a "statement".
+CATEGORY_HELP = {
+    "business": "business goals, products, customer journeys",
+    "stakeholder": "expectations of a specific stakeholder group",
+    "functional": "what the system does",
+    "security": "authentication, access control, fraud and attack resistance, encryption",
+    "privacy": "personal data, consent, minimisation, rights",
+    "regulatory": "obligations from KYC/AML/data-protection law or regulator guidance",
+    "performance": "speed, throughput, turnaround time",
+    "availability": "uptime, resilience, recovery",
+    "usability": "customer or staff experience, accessibility, friction",
+    "data": "data quality, retention, storage, lineage",
+    "integration": "external or legacy systems, registries, vendors, APIs",
+    "audit": "logging, evidence, reporting, traceability",
+    "operational": "support, monitoring, maintenance, deployment",
+}
 
-For each requirement, assign one or more category labels from this fixed set:
-functional, security, compliance, performance, usability, other.
-A requirement can (and often should) have more than one label — e.g. a step-up
-authentication requirement is typically both "security" and "compliance".
+SYSTEM_PROMPT = f"""\
+You are the classification agent for {DOMAIN}. You receive a JSON list of requirements, \
+each with a "ref" and a "statement".
 
-Respond with ONLY valid JSON matching this schema, no prose before or after:
-{"classifications": [{"id": str, "category": [str, ...]}]}
-Every "id" from the input must appear exactly once in the output, and every
-"category" value must be one of the fixed labels above.
+For each requirement assign ONE OR MORE categories from this fixed set (multi-label is \
+expected - e.g. a consent requirement is usually "privacy" and "regulatory"):
+{chr(10).join(f"- {k}: {v}" for k, v in CATEGORY_HELP.items())}
+
+Also give a "primary" category (the single best fit, one of the assigned ones) and a \
+"priority": "critical" (legal obligation or blocks launch), "high", "medium" or "low".
+
+{JSON_ONLY}
+{{"classifications": [{{"ref": str, "categories": [str], "primary": str, "priority": str}}]}}
+Every input "ref" must appear exactly once.
 """
 
 
 class ClassificationItem(BaseModel):
-    id: str
-    category: list[RequirementCategory]
+    ref: str
+    categories: list[str] = Field(default_factory=list)
+    primary: str = ""
+    priority: str = "medium"
 
 
 class ClassificationOutput(BaseModel):
     classifications: list[ClassificationItem]
 
 
-class ClassificationAgent:
-    """Tags requirements with multi-label categories."""
+def _valid_categories(values: list[str]) -> list[Category]:
+    out: list[Category] = []
+    for value in values:
+        try:
+            category = Category(value.strip().lower())
+        except ValueError:
+            continue
+        if category not in out:
+            out.append(category)
+    return out
 
-    def run(
-        self, requirements: list[Requirement], db_session: Session | None = None
-    ) -> dict[str, list[RequirementCategory]]:
-        """Returns a mapping of requirement id -> assigned categories."""
-        payload = [{"id": r.id, "statement": r.statement} for r in requirements]
+
+class ClassificationAgent:
+    def run(self, requirements: list[Requirement], db_session: Session | None = None) -> None:
+        """Sets categories, primary_category and priority on each requirement in place."""
+        payload = [{"ref": r.ref, "statement": r.statement} for r in requirements]
         result = call_agent_json(
             agent_name="classification",
             system_prompt=SYSTEM_PROMPT,
-            user_content=json.dumps(payload),
+            user_content=dumps(payload),
             output_model=ClassificationOutput,
             db_session=db_session,
         )
-        return {item.id: item.category for item in result.classifications}
+        by_ref = {item.ref: item for item in result.classifications}
+        for requirement in requirements:
+            item = by_ref.get(requirement.ref)
+            categories = _valid_categories(item.categories) if item else []
+            if not categories:
+                categories = [Category.FUNCTIONAL]
+            primary = _valid_categories([item.primary]) if item else []
+            requirement.categories = categories
+            requirement.primary_category = primary[0] if primary and primary[0] in categories else categories[0]
+            if item:
+                try:
+                    requirement.priority = Priority(item.priority.strip().lower())
+                except ValueError:
+                    pass
