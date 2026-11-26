@@ -4,7 +4,7 @@ Guidance for Claude Code when working in this repository.
 
 ## Project
 
-**Agentic AI Requirement-Gathering & SDLC Recommendation System — Payment Processing**
+**KYCompass — Agentic AI Requirement-Gathering & SDLC Recommendation System**
 
 A multi-agent system that ingests stakeholder input (interviews, policy docs, regulatory
 text) about a payment-processing feature, extracts and validates structured software

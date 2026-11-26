@@ -1,4 +1,6 @@
-# Agentic AI Requirement-Gathering & SDLC Recommendation System
+# KYCompass
+
+_Agentic AI Requirement-Gathering & SDLC Recommendation System_
 
 A multi-agent system that ingests stakeholder input about a payment-processing
 feature, extracts and validates structured software requirements, maps them to

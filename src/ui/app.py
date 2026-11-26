@@ -68,13 +68,13 @@ def _live_status(spinner_text: str):
 
 load_dotenv()
 init_db()
-st.set_page_config(page_title="Payment Requirements Review", layout="wide")
+st.set_page_config(page_title="KYCompass", layout="wide")
 st.markdown(CSS, unsafe_allow_html=True)
 st.markdown(
     """
     <div class="app-header">
-        <h1>Payment-Processing Requirements</h1>
-        <p>Multi-agent requirement gathering, compliance mapping &amp; the human approval gate</p>
+        <h1>KYCompass</h1>
+        <p>Agentic requirements gathering, regulatory mapping &amp; SDLC recommendation</p>
     </div>
     """,
     unsafe_allow_html=True,
